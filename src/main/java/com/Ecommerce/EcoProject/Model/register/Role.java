@@ -1,9 +1,14 @@
 package com.Ecommerce.EcoProject.Model.register;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.persistence.*;
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
 public class Role{
 
     @Id
@@ -13,22 +18,4 @@ public class Role{
 
     @ManyToMany(mappedBy = "roles", cascade = CascadeType.ALL)
     private List<EntityUser> users;
-
-    //getters and setters
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getAuthority() {
-        return authority;
-    }
-
-    public void setAuthority(String authority) {
-        this.authority = authority;
-    }
 }

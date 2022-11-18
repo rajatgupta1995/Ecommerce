@@ -11,6 +11,7 @@ import com.Ecommerce.EcoProject.repository.UserRepository;
 import com.Ecommerce.EcoProject.security.JWTGenerator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -43,7 +44,7 @@ public class AuthController {
         this.passwordEncode = passwordEncode;
         this.jwtGenerator = jwtGenerator;
     }
-
+    @Async
     private void sendEmail(String message, String subject, String to, String from) {
 
         //Variable for gmail
