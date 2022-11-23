@@ -95,7 +95,7 @@ public class PublicController {
         return userPasswordService.resetUserPassword(resetPasswordDto);
     }
 
-    @PostMapping("customer/logout")
+    @PatchMapping("customer/logout")
     public String logoutCustomer(HttpServletRequest request){
          return userPasswordService.logout(request);
     }

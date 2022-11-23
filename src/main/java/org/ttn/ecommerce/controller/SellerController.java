@@ -24,14 +24,21 @@ import java.util.List;
 @RequestMapping("/api/seller")
 public class SellerController {
 
-    @Autowired
+
     JWTBlackListRepository jwtBlackListRepository;
 
-    @Autowired
+
     AccessTokenRepository accessTokenRepo;
 
+
+    private SellerService sellerService;
+
     @Autowired
-    SellerService sellerService;
+    public SellerController(JWTBlackListRepository jwtBlackListRepository, AccessTokenRepository accessTokenRepo, SellerService sellerService) {
+        this.jwtBlackListRepository = jwtBlackListRepository;
+        this.accessTokenRepo = accessTokenRepo;
+        this.sellerService = sellerService;
+    }
 
     @PreAuthorize("hasRole('ROLE_SELLER')")
     @GetMapping("login")
@@ -39,14 +46,9 @@ public class SellerController {
         return "a";
     }
 
-    @GetMapping("/sellerProfile")
+    @GetMapping("/my-profile")
     public ResponseEntity<?> retrieveSeller(HttpServletRequest request){
-        String accessToken;
-        String bearerToken = request.getHeader("Authorization");
-        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")){
-            accessToken= bearerToken.substring(7,bearerToken.length());
-        }
-        return sellerService.viewSellerProfile(accessToken);
+        return sellerService.viewSellerProfile(request);
     }
 
     @GetMapping("/allSellers")
@@ -55,18 +57,18 @@ public class SellerController {
     }
 
     @GetMapping("/update-profile")
-    public ResponseEntity<String> updateSellerProfile(@Valid @RequestBody UpdateSellerDto updateSellerDto){
-        return sellerService.updateSellerProfile(updateSellerDto);
+    public ResponseEntity<String> updateSellerProfile(HttpServletRequest request,@Valid @RequestBody UpdateSellerDto updateSellerDto){
+        return sellerService.updateSellerProfile(request,updateSellerDto);
     }
 
     @GetMapping("/update-password")
-    public ResponseEntity<String> updateSellerPassword(@Valid @RequestBody ChangePasswordDto changePasswordDto){
-        return sellerService.updateSellerPassword(changePasswordDto);
+    public ResponseEntity<String> updateSellerPassword(HttpServletRequest request,@Valid @RequestBody ChangePasswordDto changePasswordDto){
+        return sellerService.updateSellerPassword(request,changePasswordDto);
     }
 
     @GetMapping("/update-address")
-    public ResponseEntity<String> updateSellerAddress(@RequestParam("addressId") Long id,@Valid @RequestBody AddressDto addressDto){
-        return sellerService.updateSellerAddress(id,addressDto);
+    public ResponseEntity<String> updateSellerAddress(HttpServletRequest request,@RequestParam("addressId") Long id,@Valid @RequestBody AddressDto addressDto){
+        return sellerService.updateSellerAddress(request,id,addressDto);
     }
 
     @PostMapping("logout")

@@ -5,9 +5,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import org.ttn.ecommerce.dto.updateDto.ChangePasswordDto;
+import org.ttn.ecommerce.dto.updateDto.UpdateCustomerDto;
 import org.ttn.ecommerce.entities.register.Address;
 import org.ttn.ecommerce.repository.CustomerRepository;
 import org.ttn.ecommerce.repository.RoleRepository;
@@ -18,6 +19,7 @@ import org.ttn.ecommerce.services.CustomerService;
 import org.ttn.ecommerce.services.EmailService;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping(value = "/customer")
@@ -51,34 +53,38 @@ public class CustomerController {
         return "a";
     }
 
-
-
     @GetMapping("/my-profile")
     public ResponseEntity<?> viewMyProfile(HttpServletRequest request) {
-        String accessToken = getJWTFromRequest(request);
-
-       return customerService.viewMyProfile(accessToken);
+        return customerService.viewMyProfile(request);
     }
 
-    private String getJWTFromRequest(HttpServletRequest request){
-        String bearerToken = request.getHeader("Authorization");
-        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")){
-            return bearerToken.substring(7,bearerToken.length());
-
-        }
-        return null;
+    @PostMapping("/add-address")
+    public ResponseEntity<?> addNewAddress(HttpServletRequest request,@Valid @RequestBody Address address) {
+        return customerService.addNewAddress(request,address);
     }
-
 
     @GetMapping("/my-addresses")
-    public ResponseEntity<?> viewMyAddresses(String accessToken) {
-        return customerService.viewMyAddresses(accessToken);
+    public ResponseEntity<?> viewMyAddresses(HttpServletRequest request){
+        return customerService.viewMyAddresses(request);
     }
 
-    @PostMapping("/{userId}/create-address")
-    public String createAddress(@PathVariable("userId") long userId, @RequestBody Address address){
-        return customerService.createAddress(userId, address);
+    @DeleteMapping("/delete-address/{address_id}")
+    public ResponseEntity<?> viewMyAddresses(@PathVariable Long address_id,HttpServletRequest request){
+        return customerService.deleteMyAddress(address_id,request);
     }
 
+    @PatchMapping("/update-profile")
+    public ResponseEntity<String> updateCustomerProfile(HttpServletRequest request,@Valid @RequestBody UpdateCustomerDto updateCustomerDto){
+        return customerService.updateCustomerProfile(request,updateCustomerDto);
+    }
 
+    @PutMapping("/update-password")
+    public ResponseEntity<String> updateCustomerPassword(HttpServletRequest request,@Valid @RequestBody ChangePasswordDto changePasswordDto){
+        return customerService.updateCustomerPassword(request,changePasswordDto);
+    }
+
+    @PatchMapping("/update-address")
+    public ResponseEntity<String> updateSellerAddress(HttpServletRequest request,@RequestParam("addressId") Long id,@Valid @RequestBody Address address){
+        return customerService.updateCustomerAddress(request,id,address);
+    }
 }

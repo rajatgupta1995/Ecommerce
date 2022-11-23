@@ -130,8 +130,8 @@ public class UserDaoService {
         seller.setPassword(passwordEncode.encode(sellerRegisterDto.getPassword()));
 
         seller.setCompanyContact(sellerRegisterDto.getCompanyContact());
-        seller.setCompanyName("To the new");
-        seller.setGst("12345kkkkl");
+        seller.setCompanyName(sellerRegisterDto.getCompanyName());
+        seller.setGst(sellerRegisterDto.getGstNumber());
 
 
         Role roles = roleRepository.findByAuthority("ROLE_SELLER").get();

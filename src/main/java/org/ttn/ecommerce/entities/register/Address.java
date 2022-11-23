@@ -1,5 +1,6 @@
 package org.ttn.ecommerce.entities.register;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -30,6 +31,7 @@ public class Address {
 
     private String label;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "user_id")
     private UserEntity userEntity;

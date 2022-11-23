@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.ttn.ecommerce.dto.AddressDto;
 import org.ttn.ecommerce.dto.updateDto.ChangePasswordDto;
 import org.ttn.ecommerce.dto.updateDto.UpdateSellerDto;
@@ -19,10 +21,11 @@ import org.ttn.ecommerce.repository.TokenRepository.AccessTokenRepository;
 import org.ttn.ecommerce.repository.TokenRepository.AddressRepository;
 import org.ttn.ecommerce.repository.UserRepository;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
-
+@Service
 @Slf4j
 public class SellerService {
     @Autowired
@@ -46,35 +49,62 @@ public class SellerService {
         return sellerRepository.findAll();
     }
 
-    public  ResponseEntity<?> viewSellerProfile(String accessToken){
+    private String getJWTFromRequest(HttpServletRequest request){
+        String bearerToken = request.getHeader("Authorization");
+        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")){
+            return bearerToken.substring(7,bearerToken.length());
+        }
+        return null;
+    }
 
+    //function for sellerProfile API
+    public  ResponseEntity<?> viewSellerProfile(HttpServletRequest request){
+        String accessToken = getJWTFromRequest(request);
+        Token token=accessTokenRepository.findByToken(accessToken).orElseThrow(() -> new IllegalStateException("Invalid Access Token!"));
+        LocalDateTime expireDateTime=token.getExpiredAt();
+        if(expireDateTime.isBefore(LocalDateTime.now())){
+            return new ResponseEntity<>("token expired",HttpStatus.BAD_REQUEST);
+        }
+
+        //can use userRepository or sellerRepository
+        if(sellerRepository.existsByEmail(token.getUserEntity().getEmail())){
+            log.info("User exists!");
+            //UserEntity or Seller
+            Seller user = sellerRepository.findByEmail(token.getUserEntity().getEmail()).orElseThrow(() -> new IllegalStateException("User not found"));
+            List<Address> list = addressRepository.findByUserId(user.getId());
+            log.info("returning a list of objects.");
+            if(list.size() > 0)
+                //sellerRepository.getCompanyNameOfUserId(user.getId()) or user.getCompanyContact()
+                return new ResponseEntity<>("Seller User Id: "+user.getId()+"\nSeller First name: "+user.getFirstName()+"\nSeller Last name: "+user.getLastName()+"\nSeller active status: "+user.isActive()+"\nContact: "+user.getCompanyContact()+"\nSeller companyName: "+user.getCompanyName()+"\nSeller gstNumber: "+user.getGst()+"\nSeller Address: \n"+list.get(0).toString(), HttpStatus.OK);
+            else
+                return new ResponseEntity<>("Seller User Id: "+user.getId()+"\nSeller First name: "+user.getFirstName()+"\nSeller Last name: "+user.getLastName()+"\nSeller active status: "+user.isActive()+"\nContact: "+user.getCompanyContact()+"\nSeller companyName: "+user.getCompanyName()+"\nSeller gstNumber: "+user.getGst(), HttpStatus.OK);
+
+        }else{
+            log.info("Couldn't find address related to user!!!");
+            return new ResponseEntity<>("Error fetching addresses", HttpStatus.NOT_FOUND);
+        }
     }
     //function for update-profile API
-    public ResponseEntity<String> updateSellerProfile(UpdateSellerDto updateSellerDto){
-        String AccessToken=updateSellerDto.getAccessToken();
-        Token token=accessTokenRepository.findByToken(AccessToken).orElseThrow(() -> new IllegalStateException("Invalid Access Token!"));
+    public ResponseEntity<String> updateSellerProfile(HttpServletRequest request,UpdateSellerDto updateSellerDto){
+        String accessToken = getJWTFromRequest(request);
+        Token token=accessTokenRepository.findByToken(accessToken).orElseThrow(() -> new IllegalStateException("Invalid Access Token!"));
 
         LocalDateTime expireDateTime=token.getExpiredAt();
         if(expireDateTime.isBefore(LocalDateTime.now())){
             return new ResponseEntity<>("token is expired", HttpStatus.BAD_REQUEST);
         }
-        if(userRepository.existsByEmail(token.getUserEntity().getEmail())){
+        if(sellerRepository.existsByEmail(token.getUserEntity().getEmail())){
             log.info("User exists with this mail");
-            UserEntity user=userRepository.findByEmail(token.getUserEntity().getEmail()).get();
+            Seller user=sellerRepository.findByEmail(token.getUserEntity().getEmail()).orElseThrow(() -> new IllegalStateException("Invalid User!"));
             if(updateSellerDto.getFirstName()!=null) {
                 user.setFirstName(updateSellerDto.getFirstName());
-            }
 
+            }
             if(updateSellerDto.getLastName()!=null) {
                 user.setLastName(updateSellerDto.getLastName());
             }
-
             if(updateSellerDto.getMiddleName()!=null) {
                 user.setMiddleName(updateSellerDto.getMiddleName());
-            }
-
-            if(updateSellerDto.getEmail()!=null) {
-                user.setEmail(updateSellerDto.getEmail());
             }
             Seller seller=sellerRepository.getSellerByUserId(user.getId());
             if(updateSellerDto.getCompanyContact()!=null) {
@@ -83,8 +113,7 @@ public class SellerService {
             if(updateSellerDto.getCompanyName()!=null) {
                 seller.setCompanyName(updateSellerDto.getCompanyName());
             }
-            seller.setGst(updateSellerDto.getGstNumber());
-            userRepository.save(user);
+            sellerRepository.save(user);
             sellerRepository.save(seller);
             log.info("user profile updated!");
             SimpleMailMessage mailMessage = new SimpleMailMessage();
@@ -109,15 +138,15 @@ public class SellerService {
     }
 
     //function for update-password API
-    public ResponseEntity<String> updateSellerPassword(ChangePasswordDto changePasswordDto){
-        String accessToken=changePasswordDto.getAccessToken();
+    public ResponseEntity<String> updateSellerPassword(HttpServletRequest request,ChangePasswordDto changePasswordDto){
+        String accessToken = getJWTFromRequest(request);
         Token token=accessTokenRepository.findByToken(accessToken).orElseThrow(() -> new IllegalStateException("Invalid Access Token!"));
         LocalDateTime expireDateTime = token.getExpiredAt();
         if(expireDateTime.isBefore(LocalDateTime.now())){
             return new ResponseEntity<>("Token expired",HttpStatus.BAD_REQUEST);
         }
         if(userRepository.existsByEmail(token.getUserEntity().getEmail())){
-            UserEntity user=userRepository.findByEmail(token.getUserEntity().getEmail()).get();
+            UserEntity user=userRepository.findByEmail(token.getUserEntity().getEmail()).orElseThrow(() -> new IllegalStateException("Invalid User"));
             user.setPassword(changePasswordDto.getPassword());
             userRepository.save(user);
             log.info("Password updated!");
@@ -140,8 +169,8 @@ public class SellerService {
     }
 
     //function for update-address API
-    public ResponseEntity<String> updateSellerAddress(Long id,AddressDto addressDto) {
-        String accessToken = addressDto.getAccessToken();
+    public ResponseEntity<String> updateSellerAddress(HttpServletRequest request,Long id,AddressDto addressDto) {
+        String accessToken = getJWTFromRequest(request);
         Token token = accessTokenRepository.findByToken(accessToken).orElseThrow(() -> new IllegalStateException("Invalid Access Token!"));
         LocalDateTime expireDateTime = token.getExpiredAt();
         if (expireDateTime.isBefore(LocalDateTime.now())) {
@@ -150,12 +179,12 @@ public class SellerService {
         }
 
         if (userRepository.existsByEmail(token.getUserEntity().getEmail())) {
-            UserEntity user = userRepository.findByEmail(token.getUserEntity().getEmail()).get();
+            UserEntity user = userRepository.findByEmail(token.getUserEntity().getEmail()).orElseThrow(() -> new IllegalStateException("Invalid User!"));
             log.info("user exists");
 
             if (addressRepository.existsById(id)) {
                 log.info("address exists");
-                Address address = addressRepository.findByid(id).get();
+                Address address = addressRepository.findByid(id).get(0);
                 address.setAddressLine(addressDto.getAddress());
                 address.setLabel(addressDto.getLabel());
                 address.setZipCode(addressDto.getZipcode());
@@ -180,6 +209,7 @@ public class SellerService {
             }
         } else {
             log.info("No address exists");
+            return new ResponseEntity<>(String.format("No address exists with address id: "+id), HttpStatus.NOT_FOUND);
         }
     }
 }

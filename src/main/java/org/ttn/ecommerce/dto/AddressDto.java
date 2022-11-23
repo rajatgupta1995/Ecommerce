@@ -7,10 +7,6 @@ import javax.validation.constraints.Size;
 
 @Data
 public class AddressDto {
-
-    @NotBlank(message = "Access token cannot be blank")
-    private String accessToken;
-
     @NotBlank(message = "Address cannot be blank")
     private String address;
 

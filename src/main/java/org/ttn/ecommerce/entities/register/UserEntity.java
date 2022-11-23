@@ -1,5 +1,7 @@
 package org.ttn.ecommerce.entities.register;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
 import org.ttn.ecommerce.entities.register.Address;
 import org.ttn.ecommerce.entities.register.Role;
@@ -38,6 +40,7 @@ public class UserEntity {
     private String lastName;
 
 
+    @JsonIgnore
     private String password;
 
     @Transient
@@ -56,7 +59,7 @@ public class UserEntity {
     private Date passwordUpdateDate;
 
 
-
+    @JsonManagedReference
     @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name="user_id")
     private Set<Address> addresses;

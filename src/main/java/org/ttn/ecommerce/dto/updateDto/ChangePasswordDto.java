@@ -7,11 +7,8 @@ import org.ttn.ecommerce.Validations.PasswordMatches;
 import javax.validation.constraints.NotBlank;
 
 @Data
-@PasswordMatches
+//@PasswordMatches
 public class ChangePasswordDto {
-    @NotBlank(message = "Access token cannot be blank")
-    private String accessToken;
-
     @Password
     private String password;
 

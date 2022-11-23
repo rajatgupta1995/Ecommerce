@@ -15,13 +15,11 @@ import org.springframework.stereotype.Service;
 @NoArgsConstructor
 public class EmailService {
 
-
     private JavaMailSender javaMailSender;
 
     private String toEmail;
     private String subject;
     private String message;
-
 
     @Autowired
     public EmailService(JavaMailSender javaMailSender) {
@@ -38,6 +36,4 @@ public class EmailService {
         mailMessage.setFrom("guptarajat687@gmail.com");
         javaMailSender.send(mailMessage);
     }
-
-
 }
