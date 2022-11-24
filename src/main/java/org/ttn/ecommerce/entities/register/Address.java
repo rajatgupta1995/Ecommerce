@@ -1,6 +1,7 @@
 package org.ttn.ecommerce.entities.register;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -33,7 +34,8 @@ public class Address {
 
     @JsonBackReference
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id",referencedColumnName = "id")
+    @JsonIgnore
     private UserEntity userEntity;
 
 

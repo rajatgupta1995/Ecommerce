@@ -9,7 +9,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
 @Entity
-@PrimaryKeyJoinColumn(name="user_id")
+@PrimaryKeyJoinColumn(name="user_id",referencedColumnName = "id")
 @Table(name="seller")
 @Data
 public class Seller extends UserEntity {

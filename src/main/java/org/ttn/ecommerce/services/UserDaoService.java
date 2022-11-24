@@ -19,19 +19,23 @@ import org.ttn.ecommerce.entities.register.Customer;
 import org.ttn.ecommerce.entities.register.Role;
 import org.ttn.ecommerce.entities.register.Seller;
 import org.ttn.ecommerce.entities.register.UserEntity;
+import org.ttn.ecommerce.entities.token.BlackListToken;
 import org.ttn.ecommerce.entities.token.RefreshToken;
 import org.ttn.ecommerce.entities.token.Token;
 import org.ttn.ecommerce.repository.CustomerRepository;
 import org.ttn.ecommerce.repository.RoleRepository;
 import org.ttn.ecommerce.repository.SellerRepository;
 import org.ttn.ecommerce.repository.TokenRepository.AccessTokenRepository;
+import org.ttn.ecommerce.repository.TokenRepository.JWTBlackListRepository;
 import org.ttn.ecommerce.repository.TokenRepository.RefreshTokenRepository;
 import org.ttn.ecommerce.repository.UserRepository;
 import org.ttn.ecommerce.security.JWTGenerator;
 import org.ttn.ecommerce.security.SecurityConstants;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Optional;
 
 @Service
 @NoArgsConstructor
@@ -49,6 +53,7 @@ public class UserDaoService {
     private TokenService tokenService;
     private AccessTokenRepository accessTokenRepository;
     private RefreshTokenRepository refreshTokenRepository;
+    private JWTBlackListRepository jwtBlackListRepository;
 
 
     @Autowired
@@ -95,12 +100,12 @@ public class UserDaoService {
 
         String token = tokenService.generateRegisterToken(customer);
 
-        emailService.setSubject("Your Account || "+ customer.getFirstName() + " finish setting up your new  Account " );
+        String subject="Your Account || "+ customer.getFirstName() + " finish setting up your new  Account ";
 
-        emailService.setToEmail(customer.getEmail());
-        emailService.setMessage("Click on the link to Activate Your Account \n"
-                + "127.0.0.1:6640/api/auth/activate_account/"+customer.getEmail() +"/"+token);
-        emailService.sendEmail();
+        String toEmail= customer.getEmail();
+        String message="Click on the link to Activate Your Account \n"
+                + "127.0.0.1:6640/api/auth/activate_account/"+customer.getEmail() +"/"+token;
+        emailService.sendEmail(toEmail,subject,message);
 
 
         return new ResponseEntity<>("Customer Registered Successfully!Activate Your Account within 3 hours",HttpStatus.CREATED);
@@ -140,19 +145,19 @@ public class UserDaoService {
         sellerRepository.save(seller);
         String token = tokenService.generateRegisterToken(seller);
 
-        emailService.setSubject("Your Account || "+ seller.getFirstName()+ " finish setting up your new  Account " );
+        String subject="Your Account || "+ seller.getFirstName()+ " finish setting up your new  Account ";
 
-        emailService.setToEmail(seller.getEmail());
-        emailService.setMessage("Click on the link to Activate Your Account \n"
-                + "127.0.0.1:6640/api/auth/activate_account/"+ seller.getEmail() +"/"+token);
-        emailService.sendEmail();
+        String toEmail=seller.getEmail();
+        String message="Click on the link to Activate Your Account \n"
+                + "127.0.0.1:6640/api/auth/activate_account/"+ seller.getEmail() +"/"+token;
+        emailService.sendEmail(toEmail,subject,message);
 
         return new ResponseEntity<>("Seller Registered Successfully!Activate Your Account within 3 hours",HttpStatus.CREATED);
 
     }
 
 
-    public ResponseEntity<?> loginCustomer(LoginDto loginDto, UserEntity user){
+    public ResponseEntity<?> login(LoginDto loginDto, UserEntity user){
 
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getEmail(),loginDto.getPassword()));
@@ -177,8 +182,27 @@ public class UserDaoService {
         return new ResponseEntity<>(new AuthResponseDto(accessToken.getToken(),refreshToken.getToken()),HttpStatus.OK);
     }
 
-    public ResponseEntity<String> confirmAccount(UserEntity userEntity, String token) {
+    public ResponseEntity<String> activateAccount(UserEntity userEntity, String token) {
        String out =  tokenService.confirmAccount(userEntity.getId(),token);
        return new ResponseEntity<>(out,HttpStatus.OK);
+    }
+
+    @Transactional
+    public ResponseEntity<?> logout(HttpServletRequest request){
+        String tokenValue = tokenService.getJWTFromRequest(request);
+        if(tokenValue == null){
+            return new ResponseEntity<>("Token not found",HttpStatus.BAD_REQUEST);
+        }
+        BlackListToken jwtBlacklist = new BlackListToken();
+        Optional<Token> token=accessTokenRepository.findByToken(tokenValue);
+        if(token.isPresent()) {
+            jwtBlacklist.setToken(token.get().getToken());
+            jwtBlacklist.setUserEntity(token.get().getUserEntity());
+            jwtBlackListRepository.save(jwtBlacklist);
+            accessTokenRepository.delete(token.get());
+            return new ResponseEntity<>("Logged out successfully", HttpStatus.OK);
+        }else{
+            return new ResponseEntity<>("Access Token Not Found",HttpStatus.BAD_REQUEST);
+        }
     }
 }

@@ -3,8 +3,6 @@ package org.ttn.ecommerce.entities.register;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
-import org.ttn.ecommerce.entities.register.Address;
-import org.ttn.ecommerce.entities.register.Role;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -23,6 +21,7 @@ public class UserEntity {
     @Id
     @SequenceGenerator(name="user_sequence",sequenceName = "user_sequence",initialValue = 1,allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "user_sequence")
+   // @Column(name = "user_id")
     private Long id;
 
     @Column(name="Email")
@@ -60,7 +59,7 @@ public class UserEntity {
 
 
     @JsonManagedReference
-    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     @JoinColumn(name="user_id")
     private Set<Address> addresses;
 

@@ -1,6 +1,5 @@
 package org.ttn.ecommerce.services;
 
-import com.auth0.jwt.exceptions.TokenExpiredException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,7 +11,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import org.ttn.ecommerce.dto.AddressDto;
 import org.ttn.ecommerce.dto.updateDto.UpdateCustomerDto;
 import org.ttn.ecommerce.dto.updateDto.ChangePasswordDto;
 import org.ttn.ecommerce.entities.register.Address;
@@ -21,7 +19,6 @@ import org.ttn.ecommerce.entities.token.Token;
 import org.ttn.ecommerce.repository.CustomerRepository;
 import org.ttn.ecommerce.repository.TokenRepository.AccessTokenRepository;
 import org.ttn.ecommerce.repository.TokenRepository.AddressRepository;
-import org.ttn.ecommerce.repository.UserRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -34,29 +31,19 @@ public class CustomerService {
     @Autowired
     private AccessTokenRepository accessTokenRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     AddressRepository addressRepository;
     @Autowired
     CustomerRepository customerRepository;
-
     @Autowired
     PasswordEncoder passwordEncoder;
-
+    @Autowired
+    TokenService tokenService;
     @Autowired
     private JavaMailSender javaMailSender;
 
-    private String getJWTFromRequest(HttpServletRequest request){
-        String bearerToken = request.getHeader("Authorization");
-        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")){
-            return bearerToken.substring(7,bearerToken.length());
-        }
-        return null;
-    }
-
     //view-profile
     public ResponseEntity<?> viewMyProfile(HttpServletRequest request)  {
-        String accessToken = getJWTFromRequest(request);
+        String accessToken = tokenService.getJWTFromRequest(request);
         Token token=accessTokenRepository.findByToken(accessToken).orElseThrow(() -> new IllegalStateException("Invalid Access Token!"));
         LocalDateTime expireDateTime=token.getExpiredAt();
         if(expireDateTime.isBefore(LocalDateTime.now())){
@@ -73,7 +60,6 @@ public class CustomerService {
                 return new ResponseEntity<>("Customer User Id: "+customer.getId()+"\nCustomer First name: "+customer.getFirstName()+"\nCustomer Last name: "+customer.getLastName()+"\nCustomer active status: "+customer.isActive()+"\nCustomer Contact: "+customer.getContact()+"\nSeller Address: \n"+list.get(0).toString(), HttpStatus.OK);
             else
                 return new ResponseEntity<>("Customer User Id: "+customer.getId()+"\nCustomer First name: "+customer.getFirstName()+"\nCustomer Last name: "+customer.getLastName()+"\nCustomer active status: "+customer.isActive()+"\nCustomer Contact: "+customer.getContact(), HttpStatus.OK);
-
         }else{
             log.info("Couldn't find address related to this Customer!");
             return new ResponseEntity<>("Error fetching addresses", HttpStatus.NOT_FOUND);
@@ -82,7 +68,7 @@ public class CustomerService {
 
     //add-address
     public ResponseEntity<?> addNewAddress(HttpServletRequest request,Address address){
-        String accessToken=getJWTFromRequest(request);
+        String accessToken=tokenService.getJWTFromRequest(request);
         Token token=accessTokenRepository.findByToken(accessToken).orElseThrow(()->new IllegalStateException("Invalid Access Token!"));
 
         LocalDateTime expireDateTime=token.getExpiredAt();
@@ -110,7 +96,7 @@ public class CustomerService {
 
     //my-addresses
     public ResponseEntity<?> viewMyAddresses(HttpServletRequest request){
-        String accessToken=getJWTFromRequest(request);
+        String accessToken=tokenService.getJWTFromRequest(request);
        Token token =  accessTokenRepository.findByToken(accessToken).orElseThrow(() -> new IllegalStateException("Invalid Access Token!"));
 
         LocalDateTime expiredDateTime = token.getExpiredAt();
@@ -129,7 +115,7 @@ public class CustomerService {
 
     //delete-address
     public ResponseEntity<?> deleteMyAddress(Long id,HttpServletRequest request){
-        String accessToken=getJWTFromRequest(request);
+        String accessToken=tokenService.getJWTFromRequest(request);
         Token token =  accessTokenRepository.findByToken(accessToken).orElseThrow(() -> new IllegalStateException("Invalid Access Token!"));
 
         LocalDateTime expiredDateTime = token.getExpiredAt();
@@ -151,7 +137,7 @@ public class CustomerService {
 
     //update-profile
     public ResponseEntity<String> updateCustomerProfile(HttpServletRequest request, UpdateCustomerDto updateCustomerDto){
-        String accessToken = getJWTFromRequest(request);
+        String accessToken = tokenService.getJWTFromRequest(request);
         Token token=accessTokenRepository.findByToken(accessToken).orElseThrow(() -> new IllegalStateException("Invalid Access Token!"));
 
         LocalDateTime expireDateTime=token.getExpiredAt();
@@ -200,15 +186,15 @@ public class CustomerService {
 
     //update-password
     public ResponseEntity<String> updateCustomerPassword(HttpServletRequest request, ChangePasswordDto changePasswordDto){
-        String accessToken = getJWTFromRequest(request);
+        String accessToken = tokenService.getJWTFromRequest(request);
         Token token=accessTokenRepository.findByToken(accessToken).orElseThrow(() -> new IllegalStateException("Invalid Access Token!"));
-
         LocalDateTime expireDateTime=token.getExpiredAt();
+
+
         if(expireDateTime.isBefore(LocalDateTime.now())){
+            log.info("Token expired!");
             return new ResponseEntity<>("token is expired", HttpStatus.BAD_REQUEST);
         }
-
-
 
         if(customerRepository.existsByEmail(token.getUserEntity().getEmail())){
 
@@ -243,17 +229,17 @@ public class CustomerService {
     }
 
     public ResponseEntity<String> updateCustomerAddress(HttpServletRequest request,Long id, Address address_) {
-        String accessToken = getJWTFromRequest(request);
+        String accessToken = tokenService.getJWTFromRequest(request);
         Token token = accessTokenRepository.findByToken(accessToken).orElseThrow(() -> new IllegalStateException("Invalid Access Token!"));
         LocalDateTime expireDateTime = token.getExpiredAt();
         if (expireDateTime.isBefore(LocalDateTime.now())) {
-            return new ResponseEntity<>("token expired!", HttpStatus.BAD_REQUEST);
+            log.info("Token expired!");
+            return new ResponseEntity<>("Token expired!", HttpStatus.BAD_REQUEST);
         }
 
         if (customerRepository.existsByEmail(token.getUserEntity().getEmail())) {
+            log.info("User exists");
             Customer customer = customerRepository.findByEmail(token.getUserEntity().getEmail()).orElseThrow(() -> new IllegalStateException("Invalid User!"));
-            log.info("user exists");
-
             if (addressRepository.existsById(id)) {
                 log.info("address exists");
                 Address address = addressRepository.findByid(id).get(0);

@@ -6,19 +6,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.ttn.ecommerce.dto.accountAuthService.ResetPasswordDto;
 import org.ttn.ecommerce.entities.register.UserEntity;
-import org.ttn.ecommerce.entities.token.BlackListToken;
 import org.ttn.ecommerce.entities.token.ForgetPasswordToken;
-import org.ttn.ecommerce.entities.token.Token;
 import org.ttn.ecommerce.repository.TokenRepository.AccessTokenRepository;
 import org.ttn.ecommerce.repository.TokenRepository.ForgetPasswordRepository;
 import org.ttn.ecommerce.repository.TokenRepository.JWTBlackListRepository;
 import org.ttn.ecommerce.repository.UserRepository;
 import org.ttn.ecommerce.security.SecurityConstants;
 
-import javax.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -27,24 +23,19 @@ import java.util.UUID;
 @Service
 @Transactional
 public class UserPasswordService {
-
     @Autowired
     UserRepository userRepository;
-
     @Autowired
     ForgetPasswordRepository forgetPasswordRepository;
-
     @Autowired
     EmailService emailService;
-
     @Autowired
     PasswordEncoder passwordEncoder;
-
     @Autowired
     AccessTokenRepository accessTokenRepository;
-
     @Autowired
     JWTBlackListRepository jwtBlackListRepository;
+
     public ResponseEntity<String> forgetPassword(String email){
         Optional<UserEntity> userEntity = userRepository.findByEmail(email);
         if(userEntity.isPresent()){
@@ -58,12 +49,12 @@ public class UserPasswordService {
                 forgetPasswordRepository.save(forgetPassword);
 
             /* Send Mail with rest password Link */
-                emailService.setSubject("Reset Password");
-                emailService.setMessage("To reset you password click the link below within 15 minutes \n"
+                String subject="Reset Password";
+                String message="To reset you password click the link below within 15 minutes \n"
                 + "http://127.0.0.1:6640/api/auth/forget-password/"
-                +forgetPassword.getToken());
-                emailService.setToEmail(userEntity.get().getEmail());
-                emailService.sendEmail();
+                +forgetPassword.getToken();
+                String toEmail=userEntity.get().getEmail();
+                emailService.sendEmail(toEmail,subject,message);
 
                 return new ResponseEntity<>("Reset Password Token Generated || Please check your email || Verify within 15 minutes",HttpStatus.OK);
         }else{
@@ -121,22 +112,5 @@ public class UserPasswordService {
 
 
         }
-    }
-
-
-    @Transactional
-    public String logout(HttpServletRequest request){
-        String bearerToken = request.getHeader("Authorization");
-        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            String tokenValue = bearerToken.substring(7, bearerToken.length());
-            //System.out.println(tokenValue);
-            BlackListToken jwtBlacklist = new BlackListToken();
-            Token token=accessTokenRepository.findByToken(tokenValue).get();
-            jwtBlacklist.setToken(token.getToken());
-            jwtBlacklist.setUserEntity(token.getUserEntity());
-            jwtBlackListRepository.save(jwtBlacklist);
-            accessTokenRepository.delete(token);
-        }
-        return "Logged out successfully";
     }
 }

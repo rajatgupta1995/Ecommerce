@@ -13,12 +13,12 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository  extends JpaRepository<UserEntity,Long> {
-   Optional<UserEntity> findByEmail(String email);
+    Optional<UserEntity> findByEmail(String email);
     boolean existsByEmail(String email);
 
     @Modifying
     @Query(value = "UPDATE user SET is_active = 1 where id = :userId",nativeQuery = true)
-    void activateUserById(@Param("userId") long id);
+    void activateUserById(@Param("userId") Long id);
 
 
 

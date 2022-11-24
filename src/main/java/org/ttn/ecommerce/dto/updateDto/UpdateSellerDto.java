@@ -1,14 +1,8 @@
 package org.ttn.ecommerce.dto.updateDto;
 
 import lombok.Data;
-import org.ttn.ecommerce.Validations.Gst;
 import org.ttn.ecommerce.Validations.Phone;
-import org.ttn.ecommerce.Validations.UniqueEmail;
-
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 
 @Data
 public class UpdateSellerDto {
