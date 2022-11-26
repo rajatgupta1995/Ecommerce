@@ -14,10 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.ttn.ecommerce.entities.register.Address;
 import org.ttn.ecommerce.entities.register.Customer;
 import org.ttn.ecommerce.entities.register.UserEntity;
-import org.ttn.ecommerce.repository.CustomerRepository;
-import org.ttn.ecommerce.repository.RoleRepository;
+import org.ttn.ecommerce.repository.RegisterRepository.CustomerRepository;
+import org.ttn.ecommerce.repository.RegisterRepository.RoleRepository;
 import org.ttn.ecommerce.repository.TokenRepository.RefreshTokenRepository;
-import org.ttn.ecommerce.repository.UserRepository;
+import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
 import org.ttn.ecommerce.services.TokenService;
 
 import java.util.*;

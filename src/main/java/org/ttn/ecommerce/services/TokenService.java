@@ -1,5 +1,6 @@
 package org.ttn.ecommerce.services;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -7,9 +8,10 @@ import org.springframework.util.StringUtils;
 import org.ttn.ecommerce.entities.token.RefreshToken;
 import org.ttn.ecommerce.entities.register.UserEntity;
 import org.ttn.ecommerce.entities.token.ActivateUserToken;
+import org.ttn.ecommerce.exception.TokenExpiredException;
 import org.ttn.ecommerce.repository.TokenRepository.RefreshTokenRepository;
-import org.ttn.ecommerce.repository.TokenRepository.RegisterUserRepository;
-import org.ttn.ecommerce.repository.UserRepository;
+import org.ttn.ecommerce.repository.TokenRepository.ActivationTokenRepository;
+import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
 import org.ttn.ecommerce.security.SecurityConstants;
 
 import javax.servlet.http.HttpServletRequest;
@@ -18,15 +20,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @Transactional
 public class TokenService {
-
     @Autowired
-    RegisterUserRepository registerUserRepository;
-
+    ActivationTokenRepository activationTokenRepository;
     @Autowired
     RefreshTokenRepository refreshTokenRepository;
-
     @Autowired
     UserRepository userRepository;
 
@@ -37,12 +37,10 @@ public class TokenService {
         activateUserToken.setCreatedAt(LocalDateTime.now());
         activateUserToken.setExpireAt(LocalDateTime.now().plusMinutes(SecurityConstants.REGISTER_TOKEN_EXPIRE_MIN));
 
-
         /*changed here*/
         activateUserToken.setUserEntity(userEntity);
 
-
-        registerUserRepository.save(activateUserToken);
+        activationTokenRepository.save(activateUserToken);
         return registerToken;
     }
 
@@ -55,11 +53,11 @@ public class TokenService {
         refreshTokenObj.setExpireAt(LocalDateTime.now().plusHours(SecurityConstants.REFRESH_TOKEN_EXPIRE_HOURS));
         refreshTokenObj.setUserEntity(userEntity);
         return refreshTokenObj;
+
     }
 
     @Transactional
     public void countAndDeleteRefreshToken(long user_id){
-
         long count = refreshTokenRepository.findByUserEntity(user_id);
         if(count >=1){
              refreshTokenRepository.deleteByUserId(user_id);
@@ -67,27 +65,26 @@ public class TokenService {
     }
 
     @Transactional
-    public String  confirmAccount(Long id, String token){
-        Optional<ActivateUserToken> activateUserToken = registerUserRepository.findByTokenAndUserEntity(token,id);
+    public String confirmAccount(Long id, String token){
+        Optional<ActivateUserToken> activateUserToken = activationTokenRepository.findByTokenAndUserEntity(token,id);
         if(activateUserToken.isPresent()){
-
-            System.out.println(activateUserToken.get().getToken());
-            if(activateUserToken.get().getActivatedAt() !=null){
+            if(activateUserToken.get().getUserEntity().isActive()){
+                log.info("Email already confirmed");
                 return "Email Already confirmed";
             }
             LocalDateTime expireAt = activateUserToken.get().getExpireAt();
             if(expireAt.isBefore(LocalDateTime.now())){
-                return "Token Expired";
+                throw new TokenExpiredException("Token has been expired");
             }
+            //activationTokenRepository.confirmUserBytoken(token,LocalDateTime.now());
 
-            registerUserRepository.confirmUserBytoken(token,LocalDateTime.now());
+            activationTokenRepository.deleteById(activateUserToken.get().getId());
             userRepository.activateUserById(id);
-
             return "Account Activated";
 
-
         }else{
-            return  "token not found";
+            log.info("Invalid Token");
+            return "Invalid Token";
         }
     }
 

@@ -12,7 +12,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.ttn.ecommerce.entities.register.Role;
 import org.ttn.ecommerce.entities.register.UserEntity;
-import org.ttn.ecommerce.repository.UserRepository;
+import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
 
 import java.util.Collection;
 import java.util.List;

@@ -14,10 +14,10 @@ import org.ttn.ecommerce.entities.register.Address;
 import org.ttn.ecommerce.entities.register.Seller;
 import org.ttn.ecommerce.entities.register.UserEntity;
 import org.ttn.ecommerce.entities.token.Token;
-import org.ttn.ecommerce.repository.SellerRepository;
+import org.ttn.ecommerce.repository.RegisterRepository.SellerRepository;
 import org.ttn.ecommerce.repository.TokenRepository.AccessTokenRepository;
 import org.ttn.ecommerce.repository.TokenRepository.AddressRepository;
-import org.ttn.ecommerce.repository.UserRepository;
+import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;

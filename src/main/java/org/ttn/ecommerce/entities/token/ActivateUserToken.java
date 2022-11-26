@@ -26,9 +26,6 @@ public class ActivateUserToken {
     @Column(name="expire_At")
     private LocalDateTime expireAt;
 
-    @Column(name="activated_at")
-    private LocalDateTime activatedAt;
-
     @ManyToOne
     @JoinColumn(name="user_id")
     private UserEntity userEntity;

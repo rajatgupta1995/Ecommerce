@@ -28,12 +28,6 @@ public class SellerController {
         this.sellerService = sellerService;
     }
 
-    @PreAuthorize("hasRole('ROLE_SELLER')")
-    @GetMapping("login")
-    public String getData(){
-        return "a";
-    }
-
     @GetMapping("/my-profile")
     public ResponseEntity<?> retrieveSeller(HttpServletRequest request){
         return sellerService.viewSellerProfile(request);

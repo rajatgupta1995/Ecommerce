@@ -12,7 +12,6 @@ import javax.validation.constraints.Pattern;
 
 
 @Data
-@PasswordMatches
 public class SellerRegisterDto {
 
     private String firstName;
@@ -37,6 +36,8 @@ public class SellerRegisterDto {
     private String companyName;
 
     private String gstNumber;
+    @Password
+    @NotBlank(message = "Confirm Password can't be empty")
     private String confirmPassword;
 
 }

@@ -3,6 +3,8 @@ package org.ttn.ecommerce.entities.register;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
+import org.ttn.ecommerce.Validations.Password;
+import org.ttn.ecommerce.Validations.UniqueEmail;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;

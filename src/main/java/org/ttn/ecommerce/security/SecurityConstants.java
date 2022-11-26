@@ -15,5 +15,7 @@ public class SecurityConstants {
 
     public static final long RESET_PASS_EXPIRE_MINUTES = 15;
 
+    public static final long FORGET_PASS_EXPIRE_MINUTES = 15;
+
 
 }

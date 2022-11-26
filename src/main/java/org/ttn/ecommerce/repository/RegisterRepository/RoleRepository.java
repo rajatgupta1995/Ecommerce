@@ -1,4 +1,4 @@
-package org.ttn.ecommerce.repository;
+package org.ttn.ecommerce.repository.RegisterRepository;
 
 
 import org.springframework.data.jpa.repository.JpaRepository;

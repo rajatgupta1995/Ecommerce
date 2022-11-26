@@ -19,12 +19,6 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
-    @PreAuthorize("hasRole('USER')")
-    @GetMapping("login")
-    public String display(){
-        return "a";
-    }
-
     @GetMapping("/my-profile")
     public ResponseEntity<?> viewMyProfile(HttpServletRequest request) {
         return customerService.viewMyProfile(request);

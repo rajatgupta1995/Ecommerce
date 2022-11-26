@@ -1,6 +1,7 @@
 package org.ttn.ecommerce.services;
 
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +23,13 @@ import org.ttn.ecommerce.entities.register.UserEntity;
 import org.ttn.ecommerce.entities.token.BlackListToken;
 import org.ttn.ecommerce.entities.token.RefreshToken;
 import org.ttn.ecommerce.entities.token.Token;
-import org.ttn.ecommerce.repository.CustomerRepository;
-import org.ttn.ecommerce.repository.RoleRepository;
-import org.ttn.ecommerce.repository.SellerRepository;
+import org.ttn.ecommerce.repository.RegisterRepository.CustomerRepository;
+import org.ttn.ecommerce.repository.RegisterRepository.RoleRepository;
+import org.ttn.ecommerce.repository.RegisterRepository.SellerRepository;
 import org.ttn.ecommerce.repository.TokenRepository.AccessTokenRepository;
 import org.ttn.ecommerce.repository.TokenRepository.JWTBlackListRepository;
 import org.ttn.ecommerce.repository.TokenRepository.RefreshTokenRepository;
-import org.ttn.ecommerce.repository.UserRepository;
+import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
 import org.ttn.ecommerce.security.JWTGenerator;
 import org.ttn.ecommerce.security.SecurityConstants;
 
@@ -40,6 +41,7 @@ import java.util.Optional;
 @Service
 @NoArgsConstructor
 @Transactional
+@Slf4j
 public class UserDaoService {
 
     private AuthenticationManager authenticationManager;
@@ -73,7 +75,12 @@ public class UserDaoService {
 
     public ResponseEntity<String> registerCustomer(CustomerRegisterDto registerDto){
         if(userRepository.existsByEmail(registerDto.getEmail())){
-            return new ResponseEntity<>("Email is already taken", HttpStatus.BAD_REQUEST);
+            log.info("Email is already registered.");
+            return new ResponseEntity<>("Email is already registered.", HttpStatus.BAD_REQUEST);
+        }
+        if(!registerDto.getPassword().equals(registerDto.getConfirmPassword()))  {
+            log.info("Password and Confirm password do not match.");
+            return new ResponseEntity<>("Password and Confirm password do not match.",HttpStatus.BAD_REQUEST);
         }
         Customer customer =new Customer();
         customer.setFirstName(registerDto.getFirstName());
@@ -93,27 +100,24 @@ public class UserDaoService {
 
 
         Role roles = roleRepository.findByAuthority("ROLE_CUSTOMER").get();
-        System.out.println(roles.getAuthority());
+        //System.out.println(roles.getAuthority());
         customer.setRoles(Collections.singletonList(roles));
 
         customerRepository.save(customer);
 
-        String token = tokenService.generateRegisterToken(customer);
+        String registerToken = tokenService.generateRegisterToken(customer);
 
-        String subject="Your Account || "+ customer.getFirstName() + " finish setting up your new  Account ";
+        String subject=customer.getFirstName() + " finish setting up your new Account ";
 
         String toEmail= customer.getEmail();
-        String message="Click on the link to Activate Your Account \n"
-                + "127.0.0.1:6640/api/auth/activate_account/"+customer.getEmail() +"/"+token;
+        String message="Activate your account by clicking the link below within 15 minutes.\n"
+                + "127.0.0.1:6640/api/auth/activate_account/"+customer.getEmail() +"/"+registerToken;
         emailService.sendEmail(toEmail,subject,message);
 
-
-        return new ResponseEntity<>("Customer Registered Successfully!Activate Your Account within 3 hours",HttpStatus.CREATED);
+        log.info("Customer registered successfully");
+        return new ResponseEntity<>("Customer registered successfully!Activate Your Account within 3hrs.",HttpStatus.CREATED);
 
     }
-
-
-
 
     public ResponseEntity<String> registerSeller(SellerRegisterDto sellerRegisterDto){
         if(userRepository.existsByEmail(sellerRegisterDto.getEmail())){
@@ -140,7 +144,7 @@ public class UserDaoService {
 
 
         Role roles = roleRepository.findByAuthority("ROLE_SELLER").get();
-        System.out.println(roles.getAuthority());
+        //System.out.println(roles.getAuthority());
         seller.setRoles(Collections.singletonList(roles));
         sellerRepository.save(seller);
         String token = tokenService.generateRegisterToken(seller);
@@ -158,14 +162,12 @@ public class UserDaoService {
 
 
     public ResponseEntity<?> login(LoginDto loginDto, UserEntity user){
-
-
+        /* Matching login entities with the entities present in security context.*/
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getEmail(),loginDto.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtGenerator.generateToken(authentication);
 
-
-        /* Access Token */
+        /* Generate Access Token for user.*/
         Token accessToken = new Token();
         accessToken.setUserEntity(user);
         accessToken.setToken(token);
@@ -173,11 +175,9 @@ public class UserDaoService {
         accessToken.setExpiredAt(LocalDateTime.now().plusMinutes(SecurityConstants.ACCESS_PASS_EXPIRE_MINUTES));
         accessTokenRepository.save(accessToken);
 
-
-        /* Refresh Token */
+        /*Generate Refresh Token to refresh access token.*/
         RefreshToken refreshToken = tokenService.generateRefreshToken(user);
         refreshTokenRepository.save(refreshToken);
-
 
         return new ResponseEntity<>(new AuthResponseDto(accessToken.getToken(),refreshToken.getToken()),HttpStatus.OK);
     }

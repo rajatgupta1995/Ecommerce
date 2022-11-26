@@ -30,9 +30,7 @@ public class EmailService {
         mailMessage.setTo(toEmail);
         mailMessage.setSubject(subject);
         mailMessage.setText(message);
-
         mailMessage.setFrom("guptarajat687@gmail.com");
-
         try {
             javaMailSender.send(mailMessage);
         } catch (MailException e) {
