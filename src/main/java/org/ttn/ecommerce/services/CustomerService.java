@@ -14,9 +14,13 @@ import org.ttn.ecommerce.dto.updateDto.UpdateCustomerDto;
 import org.ttn.ecommerce.dto.updateDto.ChangePasswordDto;
 import org.ttn.ecommerce.entities.register.Address;
 import org.ttn.ecommerce.entities.register.Customer;
+import org.ttn.ecommerce.entities.register.UserEntity;
+import org.ttn.ecommerce.entities.token.ActivateUserToken;
 import org.ttn.ecommerce.entities.token.Token;
+import org.ttn.ecommerce.exception.UserNotFoundException;
 import org.ttn.ecommerce.repository.RegisterRepository.CustomerRepository;
 import org.ttn.ecommerce.repository.TokenRepository.AccessTokenRepository;
+import org.ttn.ecommerce.repository.TokenRepository.ActivationTokenRepository;
 import org.ttn.ecommerce.repository.TokenRepository.AddressRepository;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,6 +43,10 @@ public class CustomerService {
     TokenService tokenService;
     @Autowired
     private JavaMailSender javaMailSender;
+    @Autowired
+    private ActivationTokenRepository activationTokenRepository;
+    @Autowired
+    private EmailService emailService;
 
     //view-profile
     public ResponseEntity<?> viewMyProfile(HttpServletRequest request)  {
@@ -226,6 +234,8 @@ public class CustomerService {
             return new ResponseEntity<>("Failed to change Password", HttpStatus.BAD_REQUEST);
         }
     }
+
+
 
     public ResponseEntity<String> updateCustomerAddress(HttpServletRequest request,Long id, Address address_) {
         String accessToken = tokenService.getJWTFromRequest(request);

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 import org.ttn.ecommerce.entities.token.ActivateUserToken;
+import org.ttn.ecommerce.entities.token.Token;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -23,4 +24,7 @@ public interface ActivationTokenRepository extends JpaRepository<ActivateUserTok
     @Query(value = "DELETE from activate_user_token where user_id = :id",nativeQuery = true)
     @Modifying
     public void deleteByUserId(@Param("id") Long id);
+
+    @Query(value = "SELECT * from activate_user_token WHERE user_id = ?1", nativeQuery = true)
+    ActivateUserToken findByUserId(Long id);
 }

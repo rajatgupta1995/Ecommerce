@@ -20,13 +20,16 @@ import org.ttn.ecommerce.entities.register.Customer;
 import org.ttn.ecommerce.entities.register.Role;
 import org.ttn.ecommerce.entities.register.Seller;
 import org.ttn.ecommerce.entities.register.UserEntity;
+import org.ttn.ecommerce.entities.token.ActivateUserToken;
 import org.ttn.ecommerce.entities.token.BlackListToken;
 import org.ttn.ecommerce.entities.token.RefreshToken;
 import org.ttn.ecommerce.entities.token.Token;
+import org.ttn.ecommerce.exception.UserNotFoundException;
 import org.ttn.ecommerce.repository.RegisterRepository.CustomerRepository;
 import org.ttn.ecommerce.repository.RegisterRepository.RoleRepository;
 import org.ttn.ecommerce.repository.RegisterRepository.SellerRepository;
 import org.ttn.ecommerce.repository.TokenRepository.AccessTokenRepository;
+import org.ttn.ecommerce.repository.TokenRepository.ActivationTokenRepository;
 import org.ttn.ecommerce.repository.TokenRepository.JWTBlackListRepository;
 import org.ttn.ecommerce.repository.TokenRepository.RefreshTokenRepository;
 import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
@@ -57,9 +60,10 @@ public class UserDaoService {
     private RefreshTokenRepository refreshTokenRepository;
     private JWTBlackListRepository jwtBlackListRepository;
 
+    private ActivationTokenRepository activationTokenRepository;
 
     @Autowired
-    public UserDaoService(AuthenticationManager authenticationManager, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncode, JWTGenerator jwtGenerator, CustomerRepository customerRepository, EmailService emailService, SellerRepository sellerRepository, TokenService tokenService, AccessTokenRepository accessTokenRepository, RefreshTokenRepository refreshTokenRepository) {
+    public UserDaoService(AuthenticationManager authenticationManager, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncode, JWTGenerator jwtGenerator, CustomerRepository customerRepository, EmailService emailService, SellerRepository sellerRepository, TokenService tokenService, AccessTokenRepository accessTokenRepository, RefreshTokenRepository refreshTokenRepository, JWTBlackListRepository jwtBlackListRepository, ActivationTokenRepository activationTokenRepository) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
@@ -71,18 +75,23 @@ public class UserDaoService {
         this.tokenService = tokenService;
         this.accessTokenRepository = accessTokenRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.jwtBlackListRepository = jwtBlackListRepository;
+        this.activationTokenRepository = activationTokenRepository;
     }
 
-    public ResponseEntity<String> registerCustomer(CustomerRegisterDto registerDto){
-        if(userRepository.existsByEmail(registerDto.getEmail())){
+    public ResponseEntity<String> registerCustomer(CustomerRegisterDto registerDto) {
+        /*Checking customer exist with this mail or not*/
+        if (userRepository.existsByEmail(registerDto.getEmail())) {
             log.info("Email is already registered.");
             return new ResponseEntity<>("Email is already registered.", HttpStatus.BAD_REQUEST);
         }
-        if(!registerDto.getPassword().equals(registerDto.getConfirmPassword()))  {
+        /* Checking password and confirm password match or not*/
+        if (!registerDto.getPassword().equals(registerDto.getConfirmPassword())) {
             log.info("Password and Confirm password do not match.");
-            return new ResponseEntity<>("Password and Confirm password do not match.",HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Password and Confirm password do not match.", HttpStatus.BAD_REQUEST);
         }
-        Customer customer =new Customer();
+
+        Customer customer = new Customer();
         customer.setFirstName(registerDto.getFirstName());
         customer.setMiddleName(registerDto.getMiddleName());
         customer.setLastName(registerDto.getLastName());
@@ -100,30 +109,36 @@ public class UserDaoService {
 
 
         Role roles = roleRepository.findByAuthority("ROLE_CUSTOMER").get();
-        //System.out.println(roles.getAuthority());
         customer.setRoles(Collections.singletonList(roles));
 
         customerRepository.save(customer);
-
+        /*send mail*/
         String registerToken = tokenService.generateRegisterToken(customer);
 
-        String subject=customer.getFirstName() + " finish setting up your new Account ";
+        String subject = customer.getFirstName() + " finish setting up your new Account ";
 
-        String toEmail= customer.getEmail();
-        String message="Activate your account by clicking the link below within 15 minutes.\n"
-                + "127.0.0.1:6640/api/auth/activate_account/"+customer.getEmail() +"/"+registerToken;
-        emailService.sendEmail(toEmail,subject,message);
-
+        String toEmail = customer.getEmail();
+        String message = "Activate your account by clicking the link below within 15 minutes.\n"
+                + "127.0.0.1:6640/api/auth/activate_account/" + customer.getEmail() + "/" + registerToken;
+        emailService.sendEmail(toEmail, subject, message);
+        /*success message*/
         log.info("Customer registered successfully");
-        return new ResponseEntity<>("Customer registered successfully!Activate Your Account within 3hrs.",HttpStatus.CREATED);
+        return new ResponseEntity<>("Registered successfully!Activate Your Account within 3hrs.", HttpStatus.CREATED);
 
     }
 
-    public ResponseEntity<String> registerSeller(SellerRegisterDto sellerRegisterDto){
-        if(userRepository.existsByEmail(sellerRegisterDto.getEmail())){
+    public ResponseEntity<String> registerSeller(SellerRegisterDto sellerRegisterDto) {
+        /*Checking seller exist with this mail or not*/
+        if (userRepository.existsByEmail(sellerRegisterDto.getEmail())) {
+            log.info("Email is already registered.");
             return new ResponseEntity<>("Email is already taken", HttpStatus.BAD_REQUEST);
         }
-        Seller seller =new Seller();
+        /* Checking password and confirm password match or not*/
+        if (!sellerRegisterDto.getPassword().equals(sellerRegisterDto.getConfirmPassword())) {
+            log.info("Password and Confirm password do not match.");
+            return new ResponseEntity<>("Password and Confirm password do not match.", HttpStatus.BAD_REQUEST);
+        }
+        Seller seller = new Seller();
         seller.setFirstName(sellerRegisterDto.getFirstName());
         seller.setMiddleName(sellerRegisterDto.getMiddleName());
         seller.setLastName(sellerRegisterDto.getLastName());
@@ -147,23 +162,21 @@ public class UserDaoService {
         //System.out.println(roles.getAuthority());
         seller.setRoles(Collections.singletonList(roles));
         sellerRepository.save(seller);
-        String token = tokenService.generateRegisterToken(seller);
+        /*send mail*/
+        String subject = "Account Created ";
 
-        String subject="Your Account || "+ seller.getFirstName()+ " finish setting up your new  Account ";
+        String toEmail = seller.getEmail();
+        String message = "Congratulation Your account is created.\n Contact admin to activate it.";
+        emailService.sendEmail(toEmail, subject, message);
 
-        String toEmail=seller.getEmail();
-        String message="Click on the link to Activate Your Account \n"
-                + "127.0.0.1:6640/api/auth/activate_account/"+ seller.getEmail() +"/"+token;
-        emailService.sendEmail(toEmail,subject,message);
-
-        return new ResponseEntity<>("Seller Registered Successfully!Activate Your Account within 3 hours",HttpStatus.CREATED);
+        return new ResponseEntity<>("Seller Registered Successfully!Activate Your Account within 3 hours", HttpStatus.CREATED);
 
     }
 
 
-    public ResponseEntity<?> login(LoginDto loginDto, UserEntity user){
+    public ResponseEntity<?> login(LoginDto loginDto, UserEntity user) {
         /* Matching login entities with the entities present in security context.*/
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getEmail(),loginDto.getPassword()));
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtGenerator.generateToken(authentication);
 
@@ -179,30 +192,50 @@ public class UserDaoService {
         RefreshToken refreshToken = tokenService.generateRefreshToken(user);
         refreshTokenRepository.save(refreshToken);
 
-        return new ResponseEntity<>(new AuthResponseDto(accessToken.getToken(),refreshToken.getToken()),HttpStatus.OK);
+        return new ResponseEntity<>(new AuthResponseDto(accessToken.getToken(), refreshToken.getToken()), HttpStatus.OK);
     }
 
     public ResponseEntity<String> activateAccount(UserEntity userEntity, String token) {
-       String out =  tokenService.confirmAccount(userEntity.getId(),token);
-       return new ResponseEntity<>(out,HttpStatus.OK);
+        String out =  tokenService.confirmAccount(userEntity.getId(),token);
+        return new ResponseEntity<>(out,HttpStatus.OK);
+    }
+
+    public String resendActivationToken(String email) {
+        UserEntity customer = userRepository.findByEmail(email).orElseThrow(() -> new IllegalStateException("Invalid Email!"));
+        if(customer.isActive()){
+            return "Account is already activated.";
+        }
+        Long userId= customer.getId();
+        ActivateUserToken activateUserToken = activationTokenRepository.findByUserId(userId);
+        if (activateUserToken==null) {
+            activationTokenRepository.deleteByUserId(userId);
+        }
+        String registerToken=tokenService.generateRegisterToken(customer);
+        String subject = customer.getFirstName() + " finish setting up your new Account ";
+
+        String toEmail = customer.getEmail();
+        String message = "Activate your account by clicking the link below within 15 minutes.\n"
+                + "127.0.0.1:6640/api/auth/activate_account/" + customer.getEmail() + "/" + registerToken;
+        emailService.sendEmail(toEmail, subject, message);
+        return "New Activation Link sent successfully on your registered email";
     }
 
     @Transactional
-    public ResponseEntity<?> logout(HttpServletRequest request){
+    public ResponseEntity<?> logout(HttpServletRequest request) {
         String tokenValue = tokenService.getJWTFromRequest(request);
-        if(tokenValue == null){
-            return new ResponseEntity<>("Token not found",HttpStatus.BAD_REQUEST);
+        if (tokenValue == null) {
+            return new ResponseEntity<>("Token not found", HttpStatus.BAD_REQUEST);
         }
         BlackListToken jwtBlacklist = new BlackListToken();
-        Optional<Token> token=accessTokenRepository.findByToken(tokenValue);
-        if(token.isPresent()) {
+        Optional<Token> token = accessTokenRepository.findByToken(tokenValue);
+        if (token.isPresent()) {
             jwtBlacklist.setToken(token.get().getToken());
             jwtBlacklist.setUserEntity(token.get().getUserEntity());
             jwtBlackListRepository.save(jwtBlacklist);
             accessTokenRepository.delete(token.get());
             return new ResponseEntity<>("Logged out successfully", HttpStatus.OK);
-        }else{
-            return new ResponseEntity<>("Access Token Not Found",HttpStatus.BAD_REQUEST);
+        } else {
+            return new ResponseEntity<>("Access Token Not Found", HttpStatus.BAD_REQUEST);
         }
     }
 }

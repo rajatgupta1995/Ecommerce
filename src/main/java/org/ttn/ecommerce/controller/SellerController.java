@@ -2,7 +2,6 @@ package org.ttn.ecommerce.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.ttn.ecommerce.dto.updateDto.ChangePasswordDto;
 import org.ttn.ecommerce.dto.updateDto.UpdateSellerDto;
@@ -15,10 +14,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("/api/seller")
+@RequestMapping("/seller")
 public class SellerController {
-    JWTBlackListRepository jwtBlackListRepository;
-    AccessTokenRepository accessTokenRepo;
+    private JWTBlackListRepository jwtBlackListRepository;
+    private AccessTokenRepository accessTokenRepo;
     private SellerService sellerService;
 
     @Autowired
@@ -28,22 +27,34 @@ public class SellerController {
         this.sellerService = sellerService;
     }
 
-    @GetMapping("/my-profile")
+    /**
+     * API to view seller profile
+     */
+    @GetMapping("/my-profile")  //http://localhost:6640/seller/my-profile
     public ResponseEntity<?> retrieveSeller(HttpServletRequest request){
         return sellerService.viewSellerProfile(request);
     }
 
-    @GetMapping("/update-profile")
+    /**
+     * API to view update seller profile
+     */
+    @GetMapping("/update-profile")  //http://localhost:6640/seller/update-profile
     public ResponseEntity<String> updateSellerProfile(HttpServletRequest request,@Valid @RequestBody UpdateSellerDto updateSellerDto){
         return sellerService.updateSellerProfile(request,updateSellerDto);
     }
 
-    @GetMapping("/update-password")
+    /**
+     * API to update seller password
+     */
+    @GetMapping("/update-password") //http://localhost:6640/seller/update-password
     public ResponseEntity<String> updateSellerPassword(HttpServletRequest request,@Valid @RequestBody ChangePasswordDto changePasswordDto){
         return sellerService.updateSellerPassword(request,changePasswordDto);
     }
 
-    @GetMapping("/update-address")
+    /**
+     * API to update seller address
+     */
+    @GetMapping("/update-address")  //http://localhost:6640/seller/update-address
     public ResponseEntity<String> updateSellerAddress(HttpServletRequest request,@RequestParam("addressId") Long id,@Valid @RequestBody Address address){
         return sellerService.updateSellerAddress(request,id,address);
     }

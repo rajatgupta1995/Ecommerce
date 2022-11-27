@@ -11,6 +11,7 @@ public class ChangePasswordDto {
     @Password
     private String password;
 
-    @NotBlank(message = "Confirm Password should be same to Password")
+    @NotBlank(message = "Confirm Password and Password must be same")
+    @Password
     private String confirmPassword;
 }

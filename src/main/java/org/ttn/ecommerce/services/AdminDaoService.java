@@ -41,12 +41,15 @@ public class AdminDaoService {
 
     public ResponseEntity<?> activateUser(Long user_id) {
         Optional<UserEntity> user_=userRepository.findById(user_id);
+        /*checking user exists or not*/
         if(user_.isPresent()){
             log.info("User exists.");
             UserEntity user=user_.get();
+            /*Checking the user is active or not*/
             if(!user.isActive()){
                 user.setActive(true);
                 userRepository.save(user);
+                /*Send Email*/
                 String toEmail= user.getEmail();
                 String subject="Account Activated!!";
                 String message="Your account is successfully activated by Admin.";
@@ -66,11 +69,14 @@ public class AdminDaoService {
 
     public ResponseEntity<?> deactivateUser(Long user_id) {
         Optional<UserEntity> user_=userRepository.findById(user_id);
+        /*checking user exists or not*/
         if(user_.isPresent()){
             UserEntity user=user_.get();
+            /*Checking the user is active or not*/
             if(user.isActive()){
                 user.setActive(false);
                 userRepository.save(user);
+                /*Send Email*/
                 String toEmail= user.getEmail();
                 String subject="Account Deactivated!!";
                 String message="Your account has been deactivated.\\nKindly contact Admin to activate your account again, Thanks";
@@ -90,7 +96,7 @@ public class AdminDaoService {
         Pageable pageable=PageRequest.of(Integer.parseInt(page), Integer.parseInt(size), Sort.by(new Sort.Order(Sort.Direction.DESC,sortBy)));
         Page<Customer> pages = customerRepository.findAll(pageable);
         List<Customer> customers = pages.getContent();
-
+        /*creating custom filter*/
         SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("user_id", "firstName", "middleName", "lastName", "email", "isActive");
 
         FilterProvider filterProvider = new SimpleFilterProvider().addFilter("customerFilter", filter);

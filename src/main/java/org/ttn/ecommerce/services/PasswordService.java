@@ -21,6 +21,7 @@ import org.ttn.ecommerce.security.SecurityConstants;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -45,17 +46,20 @@ public class PasswordService {
             if(!userEntity.get().isActive()){
                 throw new TokenExpiredException("User is not active");
             }
+
             /*Fetching forget token from forgetPasswordRepository if present in forget_password_token table with this user_id*/
             ForgetPasswordToken forgetPasswordToken = forgetPasswordRepository.getTokenByUserId(userEntity.get().getId()).get();
-
+            System.out.println("dfds");
             /* If forget password token already exist*/
             if(forgetPasswordToken!=null){
 //                LocalDateTime expireAt=forgetPasswordToken.getExpireAt();
 //                if(expireAt.isBefore(LocalDateTime.now())){
 //
 //                }
+                System.out.println("dfds");
                 forgetPasswordRepository.deleteByTokenId(forgetPasswordToken.getId());
             }
+            System.out.println("dfds");
 
             /*Generating a new forget token*/
             ForgetPasswordToken forgetPassword = forgerPassGenerate(userEntity.get());

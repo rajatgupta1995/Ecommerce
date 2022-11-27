@@ -78,10 +78,9 @@ public class TokenService {
             }
             //activationTokenRepository.confirmUserBytoken(token,LocalDateTime.now());
 
-            activationTokenRepository.deleteById(activateUserToken.get().getId());
             userRepository.activateUserById(id);
+            activationTokenRepository.deleteById(activateUserToken.get().getId());
             return "Account Activated";
-
         }else{
             log.info("Invalid Token");
             return "Invalid Token";

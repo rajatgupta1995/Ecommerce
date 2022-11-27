@@ -7,11 +7,12 @@ import org.springframework.data.repository.query.Param;
 import org.ttn.ecommerce.entities.token.ForgetPasswordToken;
 
 import javax.swing.text.html.Option;
+import java.util.List;
 import java.util.Optional;
 
 public interface ForgetPasswordRepository extends JpaRepository<ForgetPasswordToken,Long> {
 
-        @Query(value = "select * from forget_password_token where user_id = :id",nativeQuery = true)
+        @Query(value = "select id from forget_password_token where user_id = :id",nativeQuery = true)
         Optional<ForgetPasswordToken> getTokenByUserId(@Param("id") Long id);
 
         Optional<ForgetPasswordToken> findByToken(String token);
