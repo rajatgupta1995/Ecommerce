@@ -24,7 +24,7 @@ public class AdminController {
      * API to list all the registered sellers
      */
     @GetMapping("list-sellers")       //http://localhost:6640/admin/list-sellers
-    public MappingJacksonValue getSellers(@RequestParam(defaultValue = "0") String page, @RequestParam(defaultValue = "10")String size,String sortBy){
+    public MappingJacksonValue getSellers(@RequestParam(defaultValue = "0") String page, @RequestParam(defaultValue = "10")String size,@RequestParam("sortBy")String sortBy){
         return adminDaoService.listAllSeller(page, size,sortBy);
     }
 

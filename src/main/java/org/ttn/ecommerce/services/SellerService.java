@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.ttn.ecommerce.dto.updateDto.ChangePasswordDto;
 import org.ttn.ecommerce.dto.updateDto.UpdateSellerDto;
@@ -38,6 +39,8 @@ public class SellerService {
     TokenService tokenService;
     @Autowired
     private JavaMailSender javaMailSender;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     //function for allSellers API
     public List<Seller> getAllSeller(){
@@ -75,7 +78,7 @@ public class SellerService {
     public ResponseEntity<String> updateSellerProfile(HttpServletRequest request,UpdateSellerDto updateSellerDto){
         String accessToken = tokenService.getJWTFromRequest(request);
         Token token=accessTokenRepository.findByToken(accessToken).orElseThrow(() -> new IllegalStateException("Invalid Access Token!"));
-
+        System.out.println("fdg");
         LocalDateTime expireDateTime=token.getExpiredAt();
         if(expireDateTime.isBefore(LocalDateTime.now())){
             return new ResponseEntity<>("token is expired", HttpStatus.BAD_REQUEST);
@@ -103,6 +106,7 @@ public class SellerService {
             sellerRepository.save(user);
             sellerRepository.save(seller);
             log.info("user profile updated!");
+            /*send email*/
             SimpleMailMessage mailMessage = new SimpleMailMessage();
             mailMessage.setSubject("Profile Updated");
             mailMessage.setText("Your profile is updated, If not done  by you contact Admin asap.\n Thanks.");
@@ -134,7 +138,7 @@ public class SellerService {
         }
         if(userRepository.existsByEmail(token.getUserEntity().getEmail())){
             UserEntity user=userRepository.findByEmail(token.getUserEntity().getEmail()).orElseThrow(() -> new IllegalStateException("Invalid User"));
-            user.setPassword(changePasswordDto.getPassword());
+            user.setPassword(passwordEncoder.encode(changePasswordDto.getPassword()));
             userRepository.save(user);
             log.info("Password updated!");
             SimpleMailMessage mailMessage = new SimpleMailMessage();
@@ -190,7 +194,7 @@ public class SellerService {
                 address_.setState(address.getState());
                 address_.setZipCode(address.getZipCode());
                 address_.setLabel(address.getLabel());
-                addressRepository.save(address);
+                addressRepository.save(address_);
                 log.info("Address added to the respected user");
                 return new ResponseEntity<>("Added the address.", HttpStatus.CREATED);
             }

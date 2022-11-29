@@ -17,6 +17,7 @@ import org.ttn.ecommerce.entities.register.Customer;
 import org.ttn.ecommerce.entities.register.UserEntity;
 import org.ttn.ecommerce.entities.token.ActivateUserToken;
 import org.ttn.ecommerce.entities.token.Token;
+import org.ttn.ecommerce.exception.TokenExpiredException;
 import org.ttn.ecommerce.exception.UserNotFoundException;
 import org.ttn.ecommerce.repository.RegisterRepository.CustomerRepository;
 import org.ttn.ecommerce.repository.TokenRepository.AccessTokenRepository;
@@ -26,6 +27,7 @@ import org.ttn.ecommerce.repository.TokenRepository.AddressRepository;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -47,6 +49,8 @@ public class CustomerService {
     private ActivationTokenRepository activationTokenRepository;
     @Autowired
     private EmailService emailService;
+
+
 
     //view-profile
     public ResponseEntity<?> viewMyProfile(HttpServletRequest request)  {
@@ -81,7 +85,7 @@ public class CustomerService {
         LocalDateTime expireDateTime=token.getExpiredAt();
         if(expireDateTime.isBefore(LocalDateTime.now())){
             log.info("Token expired!");
-            return new ResponseEntity<>("Token Expired!",HttpStatus.BAD_REQUEST);
+            throw new TokenExpiredException( "Token Expired!");
         }
 
         if(customerRepository.existsByEmail(token.getUserEntity().getEmail())){
@@ -109,11 +113,14 @@ public class CustomerService {
         LocalDateTime expiredDateTime = token.getExpiredAt();
         if (expiredDateTime.isBefore(LocalDateTime.now())) {
             log.info("Token expired!");
-            return new ResponseEntity<>("Token Expired!",HttpStatus.BAD_REQUEST);
+            throw new TokenExpiredException("Token Expired!");
         }
         if (customerRepository.existsByEmail(token.getUserEntity().getEmail())) {
-            Customer customer = customerRepository.findByEmail(token.getUserEntity().getEmail()).get();
+            Customer customer = customerRepository.findByEmail(token.getUserEntity().getEmail()).orElseThrow(() -> new IllegalStateException("No customer with this mail!"));
             List<Address> list = addressRepository.findByUserId(customer.getId());
+//            List<String> list1 = list.stream().map(e->{
+//                return e.toString();
+//            }).collect(Collectors.toList());
             return new ResponseEntity<>(list, HttpStatus.OK);
         } else {
             return new ResponseEntity<>("Error fetching addresses", HttpStatus.NOT_FOUND);
@@ -121,6 +128,7 @@ public class CustomerService {
     }
 
     //delete-address
+    @Transactional
     public ResponseEntity<?> deleteMyAddress(Long id,HttpServletRequest request){
         String accessToken=tokenService.getJWTFromRequest(request);
         Token token =  accessTokenRepository.findByToken(accessToken).orElseThrow(() -> new IllegalStateException("Invalid Access Token!"));
@@ -133,7 +141,8 @@ public class CustomerService {
 
         if (customerRepository.existsByEmail(token.getUserEntity().getEmail())) {
             log.info("Address exists.");
-            addressRepository.deleteById(id);
+            //addressRepository.deleteById(id);
+            addressRepository.deleteByAddressId(id);
             log.info("deletion successful");
             return new ResponseEntity<>("Deleted Address Successfully.", HttpStatus.OK);
         }else {
@@ -211,12 +220,16 @@ public class CustomerService {
             if(!changePasswordDto.getPassword().equals(changePasswordDto.getConfirmPassword()))  {
                 return new ResponseEntity<>("Password and confirm Password do not match",HttpStatus.BAD_REQUEST);
             }
-            if (oldPassword.equals(newPassword)) {
-                return new ResponseEntity<>("Old password and new Password are same",HttpStatus.BAD_REQUEST);
-            }
-            customer.setPassword(changePasswordDto.getPassword());
+//            if (oldPassword.equals(newPassword)) {
+//                return new ResponseEntity<>("Old password and new Password are same",HttpStatus.BAD_REQUEST);
+//            }
+//            if(accessTokenRepository.existsByUserId(token.getUserEntity().getId()) >0){
+//                accessTokenRepository.deleteByUserId(token.getUserEntity().getId());
+//            }
+            customer.setPassword(newPassword);
             customerRepository.save(customer);
             log.info("Password updated!");
+
             SimpleMailMessage mailMessage = new SimpleMailMessage();
             mailMessage.setSubject("Password Updated");
             mailMessage.setText("Your password is updated, If not done  by you contact Admin asap.\n Thanks.");

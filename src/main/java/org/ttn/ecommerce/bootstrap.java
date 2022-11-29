@@ -53,7 +53,8 @@ public class bootstrap implements ApplicationRunner {
             address.setCity("Saharanpur");
             address.setState("UttarPradesh");
             address.setCountry("India");
-            address.setAddressLine("Raghav puram ");
+            address.setAddressLine("Raghav puram colony");
+            address.setLabel("bhuteshwar mandir");
             address.setZipCode("247001");
 
             UserEntity userEntity =new UserEntity();

@@ -3,6 +3,7 @@ package org.ttn.ecommerce.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import org.ttn.ecommerce.dto.updateDto.ChangePasswordDto;
@@ -61,6 +62,7 @@ public class CustomerController {
     /**
      * API to delete address by address_id
      */
+
     @DeleteMapping("/delete-address/{address_id}")  //http://localhost:6640/customer/delete-address/{address_id}
     public ResponseEntity<?> viewMyAddresses(@PathVariable Long address_id,HttpServletRequest request){
         return customerService.deleteMyAddress(address_id,request);

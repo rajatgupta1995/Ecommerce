@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.ttn.ecommerce.dto.accountAuthService.ResetPasswordDto;
 import org.ttn.ecommerce.entities.register.UserEntity;
 import org.ttn.ecommerce.entities.token.ForgetPasswordToken;
+import org.ttn.ecommerce.entities.token.Token;
 import org.ttn.ecommerce.exception.TokenExpiredException;
 import org.ttn.ecommerce.exception.UserNotFoundException;
 import org.ttn.ecommerce.repository.TokenRepository.AccessTokenRepository;
@@ -38,6 +39,9 @@ public class PasswordService {
     @Autowired
     PasswordEncoder passwordEncoder;
 
+    @Autowired
+    AccessTokenRepository accessTokenRepository;
+
     public ResponseEntity<String> forgetPassword(String email){
         Optional<UserEntity> userEntity = userRepository.findByEmail(email);
         /*Checking if user is present in userRepository or not*/
@@ -48,16 +52,16 @@ public class PasswordService {
             }
 
             /*Fetching forget token from forgetPasswordRepository if present in forget_password_token table with this user_id*/
-            ForgetPasswordToken forgetPasswordToken = forgetPasswordRepository.getTokenByUserId(userEntity.get().getId()).get();
+            Optional<ForgetPasswordToken> forgetPasswordToken = forgetPasswordRepository.getTokenByUserId(userEntity.get().getId());
             System.out.println("dfds");
             /* If forget password token already exist*/
-            if(forgetPasswordToken!=null){
+            if(forgetPasswordToken.isPresent()){
 //                LocalDateTime expireAt=forgetPasswordToken.getExpireAt();
 //                if(expireAt.isBefore(LocalDateTime.now())){
 //
 //                }
                 System.out.println("dfds");
-                forgetPasswordRepository.deleteByTokenId(forgetPasswordToken.getId());
+                forgetPasswordRepository.deleteByTokenId(forgetPasswordToken.get().getId());
             }
             System.out.println("dfds");
 
@@ -101,9 +105,9 @@ public class PasswordService {
     @Transactional
     public ResponseEntity<String> resetUserPassword(ResetPasswordDto resetPasswordDto) {
 
-        UserEntity userEntity = userRepository.findByEmail(resetPasswordDto.getEmail()).get();
+        Optional<UserEntity> userEntity = userRepository.findByEmail(resetPasswordDto.getEmail());
         /*User does not exist with this mail*/
-        if(userEntity == null){
+        if(!userEntity.isPresent()){
             log.info("User with this mail does not exist.");
             throw new UserNotFoundException("User with this email : " + resetPasswordDto.getEmail() + "does not exist.");
         }
@@ -113,27 +117,31 @@ public class PasswordService {
             return new ResponseEntity<>("Password and confirmPassword does not match.",HttpStatus.UNAUTHORIZED);
         }
         Optional<ForgetPasswordToken> forgetPasswordToken = forgetPasswordRepository.findByToken(resetPasswordDto.getToken());
-
+        UserEntity user=userEntity.get();
         /*Checking token present in forgetTokenRepository or not*/
         if(forgetPasswordToken.isPresent()){
+            ForgetPasswordToken forgetPasswordToken_=forgetPasswordToken.get();
             /*Checking token expiry*/
-            if(verifyToken(forgetPasswordToken.get().getExpireAt())){
-                forgetPasswordRepository.deleteByTokenId(forgetPasswordToken.get().getId());
+            if(verifyToken(forgetPasswordToken_.getExpireAt())){
+                forgetPasswordRepository.deleteByTokenId(forgetPasswordToken_.getId());
                 throw new TokenExpiredException("Token has been expired, request for new Token via Forgot Password Link");
             }
             else{
-                userEntity.setPassword(passwordEncoder.encode(resetPasswordDto.getPassword()));
-                userRepository.save(userEntity);
+                user.setPassword(passwordEncoder.encode(resetPasswordDto.getPassword()));
+                userRepository.save(user);
 
+                if(accessTokenRepository.existsByUserId(user.getId()) > 0){
+                    accessTokenRepository.deleteByUserId(user.getId());
+                }
                 /* Send Email */
                 SimpleMailMessage mailMessage = new SimpleMailMessage();
-                String toEmail=userEntity.getEmail();
+                String toEmail=user.getEmail();
                 String subject="Password Updated";
                 String message="Your password has been changed successfully!!";
                 emailService.sendEmail(toEmail,subject,message);
 
                 /* delete this forgetPasswordToken from repository. */
-                forgetPasswordRepository.deleteByTokenId(forgetPasswordToken.get().getId());
+                forgetPasswordRepository.deleteByTokenId(forgetPasswordToken_.getId());
 
                 return new ResponseEntity<>("Password changed",HttpStatus.OK);
             }

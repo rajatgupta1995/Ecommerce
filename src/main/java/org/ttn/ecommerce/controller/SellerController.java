@@ -38,15 +38,15 @@ public class SellerController {
     /**
      * API to view update seller profile
      */
-    @GetMapping("/update-profile")  //http://localhost:6640/seller/update-profile
-    public ResponseEntity<String> updateSellerProfile(HttpServletRequest request,@Valid @RequestBody UpdateSellerDto updateSellerDto){
+    @PatchMapping("/update-profile")  //http://localhost:6640/seller/update-profile
+    public ResponseEntity<String> updateSellerProfile(@Valid @RequestBody UpdateSellerDto updateSellerDto,HttpServletRequest request){
         return sellerService.updateSellerProfile(request,updateSellerDto);
     }
 
     /**
      * API to update seller password
      */
-    @GetMapping("/update-password") //http://localhost:6640/seller/update-password
+    @PutMapping("/update-password") //http://localhost:6640/seller/update-password
     public ResponseEntity<String> updateSellerPassword(HttpServletRequest request,@Valid @RequestBody ChangePasswordDto changePasswordDto){
         return sellerService.updateSellerPassword(request,changePasswordDto);
     }
@@ -54,7 +54,7 @@ public class SellerController {
     /**
      * API to update seller address
      */
-    @GetMapping("/update-address")  //http://localhost:6640/seller/update-address
+    @PatchMapping("/update-address")  //http://localhost:6640/seller/update-address
     public ResponseEntity<String> updateSellerAddress(HttpServletRequest request,@RequestParam("addressId") Long id,@Valid @RequestBody Address address){
         return sellerService.updateSellerAddress(request,id,address);
     }

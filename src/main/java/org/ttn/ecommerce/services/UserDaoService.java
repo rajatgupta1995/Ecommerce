@@ -169,7 +169,7 @@ public class UserDaoService {
         String message = "Congratulation Your account is created.\n Contact admin to activate it.";
         emailService.sendEmail(toEmail, subject, message);
 
-        return new ResponseEntity<>("Seller Registered Successfully!Activate Your Account within 3 hours", HttpStatus.CREATED);
+        return new ResponseEntity<>("Seller Registered Successfully!\n Contact admin to activate it.", HttpStatus.CREATED);
 
     }
 
@@ -200,6 +200,7 @@ public class UserDaoService {
         return new ResponseEntity<>(out,HttpStatus.OK);
     }
 
+
     public String resendActivationToken(String email) {
         UserEntity customer = userRepository.findByEmail(email).orElseThrow(() -> new IllegalStateException("Invalid Email!"));
         if(customer.isActive()){
@@ -229,10 +230,13 @@ public class UserDaoService {
         BlackListToken jwtBlacklist = new BlackListToken();
         Optional<Token> token = accessTokenRepository.findByToken(tokenValue);
         if (token.isPresent()) {
+            /*need discussion*/
             jwtBlacklist.setToken(token.get().getToken());
             jwtBlacklist.setUserEntity(token.get().getUserEntity());
             jwtBlackListRepository.save(jwtBlacklist);
-            accessTokenRepository.delete(token.get());
+            if(accessTokenRepository.existsByUserId(token.get().getUserEntity().getId())>0){
+                accessTokenRepository.deleteByUserId(token.get().getUserEntity().getId());
+            }
             return new ResponseEntity<>("Logged out successfully", HttpStatus.OK);
         } else {
             return new ResponseEntity<>("Access Token Not Found", HttpStatus.BAD_REQUEST);

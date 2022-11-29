@@ -1,5 +1,6 @@
 package org.ttn.ecommerce.entities.register;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +13,7 @@ import javax.validation.constraints.NotNull;
 @PrimaryKeyJoinColumn(name="user_id",referencedColumnName = "id")
 @Table(name="seller")
 @Data
+@JsonFilter("sellerFilter")
 public class Seller extends UserEntity {
 
     @NotNull

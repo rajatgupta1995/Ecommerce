@@ -87,7 +87,7 @@ public class AuthController {
      * API for forgot password
      */
     @PostMapping("forget-password/{email}")   //http://localhost:6640/api/auth/forget-password/{email}
-    public ResponseEntity<?> forgetUserPassword(@PathVariable String email){
+    public ResponseEntity<?> forgetUserPassword(@Valid @PathVariable String email){
         return userPasswordService.forgetPassword(email);
     }
 
@@ -95,7 +95,7 @@ public class AuthController {
      * API to reset user password
      */
     @PatchMapping("reset-password") //http://localhost:6640/api/auth/reset-password
-    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordDto resetPasswordDto){
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordDto resetPasswordDto){
         return userPasswordService.resetUserPassword(resetPasswordDto);
     }
 
