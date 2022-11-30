@@ -9,6 +9,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.ttn.ecommerce.dto.updateDto.AddressDto;
 import org.ttn.ecommerce.dto.updateDto.ChangePasswordDto;
 import org.ttn.ecommerce.dto.updateDto.UpdateSellerDto;
 import org.ttn.ecommerce.entities.register.Address;
@@ -160,7 +161,7 @@ public class SellerService {
     }
 
     //function for update-address API
-    public ResponseEntity<String> updateSellerAddress(HttpServletRequest request,Long id,Address address) {
+    public ResponseEntity<String> updateSellerAddress(HttpServletRequest request, Long id, AddressDto addressDto) {
         String accessToken = tokenService.getJWTFromRequest(request);
         Token token = accessTokenRepository.findByToken(accessToken).orElseThrow(() -> new IllegalStateException("Invalid Access Token!"));
         LocalDateTime expireDateTime = token.getExpiredAt();
@@ -175,26 +176,26 @@ public class SellerService {
 
             if (addressRepository.existsById(id)) {
                 log.info("address exists");
-                Address address_ = addressRepository.findByid(id).get(0);
-                address_.setAddressLine(address.getAddressLine());
-                address_.setLabel(address.getLabel());
-                address_.setZipCode(address.getZipCode());
-                address_.setCountry(address.getCountry());
-                address_.setState(address.getState());
-                address_.setCity(address.getCity());
+                Address address = addressRepository.findByid(id).get(0);
+                address.setAddressLine(addressDto.getAddressLine());
+                address.setLabel(addressDto.getLabel());
+                address.setZipCode(addressDto.getZipCode());
+                address.setCountry(addressDto.getCountry());
+                address.setState(addressDto.getState());
+                address.setCity(addressDto.getCity());
                 log.info("trying to save the updated address");
                 addressRepository.save(address);
                 return new ResponseEntity<>("Address updated successfully.", HttpStatus.OK);
             } else {
-                Address address_ = new Address();
-                address_.setUserEntity(user);
-                address_.setAddressLine(address.getAddressLine());
-                address_.setCity(address.getCity());
-                address_.setCountry(address.getCountry());
-                address_.setState(address.getState());
-                address_.setZipCode(address.getZipCode());
-                address_.setLabel(address.getLabel());
-                addressRepository.save(address_);
+                Address address = new Address();
+                address.setUserEntity(user);
+                address.setAddressLine(addressDto.getAddressLine());
+                address.setCity(addressDto.getCity());
+                address.setCountry(addressDto.getCountry());
+                address.setState(addressDto.getState());
+                address.setZipCode(addressDto.getZipCode());
+                address.setLabel(addressDto.getLabel());
+                addressRepository.save(address);
                 log.info("Address added to the respected user");
                 return new ResponseEntity<>("Added the address.", HttpStatus.CREATED);
             }

@@ -3,6 +3,7 @@ package org.ttn.ecommerce.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.ttn.ecommerce.dto.updateDto.AddressDto;
 import org.ttn.ecommerce.dto.updateDto.ChangePasswordDto;
 import org.ttn.ecommerce.dto.updateDto.UpdateSellerDto;
 import org.ttn.ecommerce.entities.register.Address;
@@ -55,7 +56,7 @@ public class SellerController {
      * API to update seller address
      */
     @PatchMapping("/update-address")  //http://localhost:6640/seller/update-address
-    public ResponseEntity<String> updateSellerAddress(HttpServletRequest request,@RequestParam("addressId") Long id,@Valid @RequestBody Address address){
-        return sellerService.updateSellerAddress(request,id,address);
+    public ResponseEntity<String> updateSellerAddress(HttpServletRequest request,@RequestParam("addressId") Long id,@Valid @RequestBody AddressDto addressDto){
+        return sellerService.updateSellerAddress(request,id,addressDto);
     }
 }

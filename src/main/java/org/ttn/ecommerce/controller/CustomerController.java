@@ -3,21 +3,16 @@ package org.ttn.ecommerce.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-
+import org.ttn.ecommerce.dto.updateDto.AddressDto;
 import org.ttn.ecommerce.dto.updateDto.ChangePasswordDto;
 import org.ttn.ecommerce.dto.updateDto.UpdateCustomerDto;
 import org.ttn.ecommerce.entities.register.Address;
-import org.ttn.ecommerce.entities.register.UserEntity;
-import org.ttn.ecommerce.exception.UserNotFoundException;
 import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
 import org.ttn.ecommerce.services.CustomerService;
 import org.ttn.ecommerce.services.UserDaoService;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -62,7 +57,6 @@ public class CustomerController {
     /**
      * API to delete address by address_id
      */
-
     @DeleteMapping("/delete-address/{address_id}")  //http://localhost:6640/customer/delete-address/{address_id}
     public ResponseEntity<?> viewMyAddresses(@PathVariable Long address_id,HttpServletRequest request){
         return customerService.deleteMyAddress(address_id,request);
@@ -89,7 +83,7 @@ public class CustomerController {
      * API to update password
      */
     @PatchMapping("/update-address")    //http://localhost:6640/customer/update-address
-    public ResponseEntity<String> updateSellerAddress(HttpServletRequest request,@RequestParam("addressId") Long id,@Valid @RequestBody Address address){
-        return customerService.updateCustomerAddress(request,id,address);
+    public ResponseEntity<String> updateSellerAddress(HttpServletRequest request,@RequestParam("addressId") Long id,@Valid @RequestBody AddressDto addressDto){
+        return customerService.updateCustomerAddress(request,id,addressDto);
     }
 }

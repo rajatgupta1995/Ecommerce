@@ -23,23 +23,23 @@ public class Address {
     @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "address_sequence")
     private Long id;
 
-    //@NotBlank(message = "Address cannot be blank")
+    @NotBlank(message = "Address cannot be blank")
     private String addressLine;
 
-    //@NotBlank(message = "City cannot be blank")
+    @NotBlank(message = "City cannot be blank")
     private String city;
 
-    //@NotBlank(message = "State cannot be blank")
+    @NotBlank(message = "State cannot be blank")
     private String state;
 
-    //@NotBlank(message = "Country cannot be blank")
+    @NotBlank(message = "Country cannot be blank")
     private String country;
 
-    //@NotBlank(message = "Zip code cannot be blank")
+    @NotBlank(message = "Zip code cannot be blank")
     @Size(min = 6, max = 6, message = "It should be exact 6 digits")
     private String zipCode;
 
-    //@NotBlank(message = "Label cannot be blank")
+    @NotBlank(message = "Label cannot be blank")
     private String label;
 
     @JsonBackReference

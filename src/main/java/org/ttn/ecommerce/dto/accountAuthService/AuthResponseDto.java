@@ -1,4 +1,4 @@
-package org.ttn.ecommerce.dto;
+package org.ttn.ecommerce.dto.accountAuthService;
 
 import lombok.Data;
 

@@ -2,7 +2,6 @@ package org.ttn.ecommerce.dto.updateDto;
 
 import lombok.Data;
 import org.ttn.ecommerce.Validations.Phone;
-import javax.validation.constraints.Pattern;
 
 @Data
 public class UpdateSellerDto {

@@ -2,7 +2,6 @@ package org.ttn.ecommerce.dto.register;
 
 import lombok.Data;
 import org.ttn.ecommerce.Validations.Password;
-import org.ttn.ecommerce.Validations.PasswordMatches;
 import org.ttn.ecommerce.Validations.Phone;
 import org.ttn.ecommerce.Validations.UniqueEmail;
 

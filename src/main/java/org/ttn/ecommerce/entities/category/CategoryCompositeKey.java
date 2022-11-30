@@ -1,20 +1,16 @@
-package org.ttn.ecommerce.entities;
+package org.ttn.ecommerce.entities.category;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import lombok.EqualsAndHashCode;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
 import java.io.Serializable;
 
 @Data
 @Embeddable
-@NoArgsConstructor
-@AllArgsConstructor
+@EqualsAndHashCode
 public class CategoryCompositeKey implements Serializable {
+
     @Column(name="category_id")
     private Long categoryId;
 

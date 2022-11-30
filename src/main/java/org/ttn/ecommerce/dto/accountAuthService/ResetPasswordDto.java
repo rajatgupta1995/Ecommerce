@@ -2,7 +2,6 @@ package org.ttn.ecommerce.dto.accountAuthService;
 
 import lombok.Data;
 import org.ttn.ecommerce.Validations.Password;
-import org.ttn.ecommerce.Validations.PasswordMatches;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;

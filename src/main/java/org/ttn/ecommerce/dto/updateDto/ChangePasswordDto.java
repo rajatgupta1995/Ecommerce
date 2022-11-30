@@ -8,6 +8,7 @@ import javax.validation.constraints.NotBlank;
 @Data
 //@PasswordMatches
 public class ChangePasswordDto {
+
     @Password
     private String password;
 
