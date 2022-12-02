@@ -18,7 +18,7 @@ import org.ttn.ecommerce.repository.RegisterRepository.CustomerRepository;
 import org.ttn.ecommerce.repository.RegisterRepository.RoleRepository;
 import org.ttn.ecommerce.repository.TokenRepository.RefreshTokenRepository;
 import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
-import org.ttn.ecommerce.services.TokenService;
+import org.ttn.ecommerce.services.Impl.TokenServiceImpl;
 
 import java.util.*;
 
@@ -46,7 +46,7 @@ public class Test {
     RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
-    TokenService tokenService;
+    TokenServiceImpl tokenService;
 
     @org.junit.jupiter.api.Test
     void contextLoads() {

@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.ttn.ecommerce.entities.register.Seller;
+import org.ttn.ecommerce.entities.register.UserEntity;
 
 import javax.transaction.Transactional;
 import java.util.Optional;
@@ -27,6 +28,7 @@ public interface SellerRepository extends JpaRepository<Seller,Long> {
 
     @Query(value = "SELECT a.gst from seller a WHERE a.user_id = ?1", nativeQuery = true)
     String getGstNumberOfUserId(Long id);
+
 
 }
 

@@ -1,4 +1,4 @@
-package org.ttn.ecommerce.services;
+package org.ttn.ecommerce.services.Impl;
 
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
@@ -20,13 +20,15 @@ import org.ttn.ecommerce.exception.NotFoundRequestException;
 import org.ttn.ecommerce.repository.RegisterRepository.CustomerRepository;
 import org.ttn.ecommerce.repository.RegisterRepository.SellerRepository;
 import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
+import org.ttn.ecommerce.services.AdminService;
+import org.ttn.ecommerce.services.EmailService;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
 @Slf4j
-public class AdminDaoService {
+public class AdminServiceImpl implements AdminService {
     @Autowired
     private UserRepository userRepository;
 
@@ -39,6 +41,7 @@ public class AdminDaoService {
     @Autowired
     private SellerRepository sellerRepository;
 
+    @Override
     public ResponseEntity<?> activateUser(Long user_id) {
         Optional<UserEntity> user_=userRepository.findById(user_id);
         /*checking user exists or not*/
@@ -62,11 +65,12 @@ public class AdminDaoService {
 
         }else{
             log.info("No User exists!!");
-            throw new NotFoundRequestException( String.format("No user exists with this user id: %s.", user_id), HttpStatus.BAD_REQUEST);
+            throw new NotFoundRequestException( String.format("No user exists with this user id: %s.", user_id));
         }
 
     }
 
+    @Override
     public ResponseEntity<?> deactivateUser(Long user_id) {
         Optional<UserEntity> user_=userRepository.findById(user_id);
         /*checking user exists or not*/
@@ -88,11 +92,12 @@ public class AdminDaoService {
             }
         }else{
             log.info("No User exists!!");
-            throw new NotFoundRequestException( String.format("No user exists with this user id: %s.", user_id), HttpStatus.BAD_REQUEST);
+            throw new NotFoundRequestException( String.format("No user exists with this user id: %s.", user_id));
         }
     }
 
-    public MappingJacksonValue listAllCustomer(String page, String size,String sortBy) {
+    @Override
+    public MappingJacksonValue listAllCustomer(String page, String size, String sortBy) {
         Pageable pageable=PageRequest.of(Integer.parseInt(page), Integer.parseInt(size), Sort.by(new Sort.Order(Sort.Direction.DESC,sortBy)));
         Page<Customer> pages = customerRepository.findAll(pageable);
         List<Customer> customers = pages.getContent();
@@ -106,6 +111,7 @@ public class AdminDaoService {
         return mappingJacksonValue;
     }
 
+    @Override
     public MappingJacksonValue listAllSeller(String page, String size, String sortBy) {
         Pageable pageable=PageRequest.of(Integer.parseInt(page),Integer.parseInt(size),Sort.by(new Sort.Order(Sort.Direction.DESC,sortBy)));
         Page<Seller> pages=sellerRepository.findAll(pageable);

@@ -2,11 +2,14 @@ package org.ttn.ecommerce.entities.category;
 
 import javax.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.ttn.ecommerce.entities.category.Category;
 import org.ttn.ecommerce.entities.category.CategoryCompositeKey;
 import org.ttn.ecommerce.entities.category.CategoryMetaDataField;
 
-@Data
+@Getter
+@Setter
 @Entity
 public class CategoryMetadataFieldValue {
     @EmbeddedId
@@ -14,13 +17,15 @@ public class CategoryMetadataFieldValue {
 
     private String value;
 
-    @ManyToOne
+
+    //@JoinColumn(name = "category_id")
+    @ManyToOne(fetch = FetchType.EAGER)
     @MapsId("categoryId")
-    @JoinColumn(name = "category_id")
     private Category category;
 
+
+    //@JoinColumn(name = "category_meta_data_field_id")
     @ManyToOne
     @MapsId("categoryMetaDataFieldId")
-    @JoinColumn(name = "category_meta_data_field_id")
     private CategoryMetaDataField categoryMetaDataField;
 }

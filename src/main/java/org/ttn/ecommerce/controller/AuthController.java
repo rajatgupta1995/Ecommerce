@@ -13,8 +13,8 @@ import org.ttn.ecommerce.dto.register.SellerRegisterDto;
 import org.ttn.ecommerce.entities.register.UserEntity;
 import org.ttn.ecommerce.exception.UserNotFoundException;
 import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
-import org.ttn.ecommerce.services.UserDaoService;
 import org.ttn.ecommerce.services.PasswordService;
+import org.ttn.ecommerce.services.UserService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -27,16 +27,16 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private UserDaoService userDaoService;
+    private UserService userService;
     @Autowired
-    private PasswordService userPasswordService;
+    private PasswordService passwordService;
 
     /**
      * API to register customer
      */
     @PostMapping("customer/register") //http://localhost:6640/api/auth/customer/register
     public ResponseEntity<String> registerCustomer(@Valid @RequestBody CustomerRegisterDto customerRegisterDto){
-        return userDaoService.registerCustomer(customerRegisterDto);
+        return userService.registerCustomer(customerRegisterDto);
     }
 
     /**
@@ -44,7 +44,7 @@ public class AuthController {
      */
     @PostMapping("seller/register")    //http://localhost:6640/api/auth/seller/register
     public ResponseEntity<String> registerSeller(@Valid @RequestBody SellerRegisterDto sellerRegisterDto){
-        return userDaoService.registerSeller(sellerRegisterDto);
+        return userService.registerSeller(sellerRegisterDto);
     }
 
     /**
@@ -57,7 +57,7 @@ public class AuthController {
             log.info("Account is not active");
             return new ResponseEntity<>("Account is not active ! Please contact admin to activate it", HttpStatus.BAD_REQUEST);
         }
-        return userDaoService.login(loginDto,user);
+        return userService.login(loginDto,user);
     }
 
     /**
@@ -69,7 +69,7 @@ public class AuthController {
         System.out.println(email);
         if(userEntity.isPresent()){
             log.info("user exists.");
-            return userDaoService.activateAccount(userEntity.get(),token);
+            return userService.activateAccount(userEntity.get(),token);
         }
         throw new UserNotFoundException("User with this email : " + email + "does not exist." );
     }
@@ -80,7 +80,7 @@ public class AuthController {
     @PostMapping(path = "/resendActivationToken")    //http://localhost:6640/api/auth/resendActivationToken
     public String resendActivationToken(@RequestParam String email) {
         System.out.println(email);
-        return userDaoService.resendActivationToken(email);
+        return userService.resendActivationToken(email);
     }
 
     /**
@@ -88,7 +88,7 @@ public class AuthController {
      */
     @PostMapping("forget-password/{email}")   //http://localhost:6640/api/auth/forget-password/{email}
     public ResponseEntity<?> forgetUserPassword(@Valid @PathVariable String email){
-        return userPasswordService.forgetPassword(email);
+        return passwordService.forgetPassword(email);
     }
 
     /**
@@ -96,7 +96,7 @@ public class AuthController {
      */
     @PatchMapping("reset-password") //http://localhost:6640/api/auth/reset-password
     public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordDto resetPasswordDto){
-        return userPasswordService.resetUserPassword(resetPasswordDto);
+        return passwordService.resetUserPassword(resetPasswordDto);
     }
 
     /**
@@ -105,7 +105,9 @@ public class AuthController {
     @PostMapping("logout")  //http://localhost:6640/api/auth/logout
     public ResponseEntity<?> logoutUser(HttpServletRequest request){
 
-        return userDaoService.logout(request);
+        return userService.logout(request);
     }
+
+
 
 }

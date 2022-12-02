@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Setter
 @NoArgsConstructor
 @Slf4j
-public class EmailService {
+public class EmailService{
 
     private JavaMailSender javaMailSender;
     @Autowired
@@ -25,7 +25,7 @@ public class EmailService {
     }
 
     @Async
-    public void sendEmail(String toEmail,String subject,String message){
+    public void sendEmail(String toEmail, String subject, String message){
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(toEmail);
         mailMessage.setSubject(subject);

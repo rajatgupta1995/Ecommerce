@@ -1,4 +1,4 @@
-package org.ttn.ecommerce.repository.category;
+package org.ttn.ecommerce.repository.categoryRepository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

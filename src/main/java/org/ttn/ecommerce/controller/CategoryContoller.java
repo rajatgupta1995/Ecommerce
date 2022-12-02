@@ -4,21 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.ttn.ecommerce.dto.category.CategoryMetaDataFieldDto;
-import org.ttn.ecommerce.dto.category.CategoryDto;
-import org.ttn.ecommerce.dto.category.CategoryViewDto;
-import org.ttn.ecommerce.entities.category.Category;
-import org.ttn.ecommerce.repository.category.CategoryRepository;
+import org.ttn.ecommerce.dto.category.*;
 import org.ttn.ecommerce.services.CategoryService;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/category/admin")
+@RequestMapping("/admin/category")
 public class CategoryContoller {
-    CategoryRepository categoryRepository;
     @Autowired
-    CategoryService categoryService;
+    private CategoryService categoryService;
 
     /**
      *  API add metadata field
@@ -39,9 +32,9 @@ public class CategoryContoller {
     /**
      *  API add a category
      */
-    @GetMapping("/add/category")
-    public ResponseEntity<?> addCategory(@RequestBody CategoryDto categoryModel) {
-        return categoryService.addCategory(categoryModel);
+    @PostMapping("/add/category")
+    public ResponseEntity<?> addCategory(@RequestBody CategoryDto categoryDto) {
+        return categoryService.addCategory(categoryDto);
     }
 
     /**
@@ -60,5 +53,29 @@ public class CategoryContoller {
     public ResponseEntity<CategoryViewDto> viewCategory(@PathVariable long id) {
 
         return new ResponseEntity<>(categoryService.viewCategory(id), HttpStatus.OK);
+    }
+
+    /**
+     *  API to update category
+     */
+    @PutMapping(path = "/update/category")
+    public ResponseEntity<?> updateCategory(@RequestParam long categoryId,@RequestBody CategoryUpdateDto categoryUpdateDto){
+        return categoryService.updateCategory(categoryId,categoryUpdateDto);
+    }
+
+    /**
+     *  API to add new category metadata field value for a category
+     */
+    @PostMapping("/metadata-fields/addValues/{categoryId}/{metaFieldId}")
+    public String addMetaDataFieldValues(@RequestBody CategoryMetaDataFieldValueDto categoryMetaDataFieldValueDto,  @PathVariable Long categoryId, @PathVariable Long metaFieldId) {
+        return categoryService.addNewMetadataFieldValues(categoryMetaDataFieldValueDto, categoryId, metaFieldId);
+    }
+
+    /**
+     *  API to add update category metadata field value for a category
+     */
+    @PutMapping("/metadata-fields/updateValues/{categoryId}/{metaFieldId}")
+    public ResponseEntity<?> updateCategoryMetadataFieldValues(@PathVariable Long categoryId, @PathVariable Long metaFieldId, @RequestBody CategoryMetaDataFieldValueDto categoryMetaDataFieldValueDto) {
+        return categoryService.updateCategoryMetadataFieldValues(categoryId, metaFieldId,categoryMetaDataFieldValueDto);
     }
 }

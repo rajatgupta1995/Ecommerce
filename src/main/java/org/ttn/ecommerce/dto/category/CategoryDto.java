@@ -6,9 +6,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class CategoryDto {
-
     @NotNull
     private String name;
-
     private Long parentCategoryId;
 }

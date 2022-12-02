@@ -1,4 +1,4 @@
-package org.ttn.ecommerce.services;
+package org.ttn.ecommerce.services.Impl;
 
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,6 @@ import org.ttn.ecommerce.entities.register.Role;
 import org.ttn.ecommerce.entities.register.Seller;
 import org.ttn.ecommerce.entities.register.UserEntity;
 import org.ttn.ecommerce.entities.token.ActivateUserToken;
-import org.ttn.ecommerce.entities.token.BlackListToken;
 import org.ttn.ecommerce.entities.token.RefreshToken;
 import org.ttn.ecommerce.entities.token.Token;
 import org.ttn.ecommerce.repository.RegisterRepository.CustomerRepository;
@@ -29,11 +28,13 @@ import org.ttn.ecommerce.repository.RegisterRepository.RoleRepository;
 import org.ttn.ecommerce.repository.RegisterRepository.SellerRepository;
 import org.ttn.ecommerce.repository.TokenRepository.AccessTokenRepository;
 import org.ttn.ecommerce.repository.TokenRepository.ActivationTokenRepository;
-import org.ttn.ecommerce.repository.TokenRepository.JWTBlackListRepository;
 import org.ttn.ecommerce.repository.TokenRepository.RefreshTokenRepository;
 import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
 import org.ttn.ecommerce.security.JWTGenerator;
 import org.ttn.ecommerce.security.SecurityConstants;
+import org.ttn.ecommerce.services.EmailService;
+import org.ttn.ecommerce.services.TokenService;
+import org.ttn.ecommerce.services.UserService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -44,7 +45,7 @@ import java.util.Optional;
 @NoArgsConstructor
 @Transactional
 @Slf4j
-public class UserDaoService {
+public class UserServiceImpl implements UserService {
 
     private AuthenticationManager authenticationManager;
     private UserRepository userRepository;
@@ -57,12 +58,11 @@ public class UserDaoService {
     private TokenService tokenService;
     private AccessTokenRepository accessTokenRepository;
     private RefreshTokenRepository refreshTokenRepository;
-    private JWTBlackListRepository jwtBlackListRepository;
 
     private ActivationTokenRepository activationTokenRepository;
 
     @Autowired
-    public UserDaoService(AuthenticationManager authenticationManager, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncode, JWTGenerator jwtGenerator, CustomerRepository customerRepository, EmailService emailService, SellerRepository sellerRepository, TokenService tokenService, AccessTokenRepository accessTokenRepository, RefreshTokenRepository refreshTokenRepository, JWTBlackListRepository jwtBlackListRepository, ActivationTokenRepository activationTokenRepository) {
+    public UserServiceImpl(AuthenticationManager authenticationManager, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncode, JWTGenerator jwtGenerator, CustomerRepository customerRepository, EmailService emailService, SellerRepository sellerRepository, TokenService tokenService, AccessTokenRepository accessTokenRepository, RefreshTokenRepository refreshTokenRepository, ActivationTokenRepository activationTokenRepository) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
@@ -74,10 +74,10 @@ public class UserDaoService {
         this.tokenService = tokenService;
         this.accessTokenRepository = accessTokenRepository;
         this.refreshTokenRepository = refreshTokenRepository;
-        this.jwtBlackListRepository = jwtBlackListRepository;
         this.activationTokenRepository = activationTokenRepository;
     }
 
+    @Override
     public ResponseEntity<String> registerCustomer(CustomerRegisterDto registerDto) {
         /*Checking customer exist with this mail or not*/
         if (userRepository.existsByEmail(registerDto.getEmail())) {
@@ -126,6 +126,7 @@ public class UserDaoService {
 
     }
 
+    @Override
     public ResponseEntity<String> registerSeller(SellerRegisterDto sellerRegisterDto) {
         /*Checking seller exist with this mail or not*/
         if (userRepository.existsByEmail(sellerRegisterDto.getEmail())) {
@@ -162,10 +163,10 @@ public class UserDaoService {
         seller.setRoles(Collections.singletonList(roles));
         sellerRepository.save(seller);
         /*send mail*/
-        String subject = "Account Created ";
+        String subject = "New seller Registered!!";
 
-        String toEmail = seller.getEmail();
-        String message = "Congratulation Your account is created.\n Contact admin to activate it.";
+        String toEmail = "rajat.gupta1@tothenew.com";
+        String message = "New seller registered with userId:"+seller.getId()+" .Please Activate it.";
         emailService.sendEmail(toEmail, subject, message);
 
         return new ResponseEntity<>("Seller Registered Successfully!\n Contact admin to activate it.", HttpStatus.CREATED);
@@ -173,6 +174,7 @@ public class UserDaoService {
     }
 
 
+    @Override
     public ResponseEntity<?> login(LoginDto loginDto, UserEntity user) {
         /* Matching login entities with the entities present in security context.*/
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword()));
@@ -194,12 +196,14 @@ public class UserDaoService {
         return new ResponseEntity<>(new AuthResponseDto(accessToken.getToken(), refreshToken.getToken()), HttpStatus.OK);
     }
 
+    @Override
     public ResponseEntity<String> activateAccount(UserEntity userEntity, String token) {
         String out =  tokenService.confirmAccount(userEntity.getId(),token);
         return new ResponseEntity<>(out,HttpStatus.OK);
     }
 
 
+    @Override
     public String resendActivationToken(String email) {
         UserEntity customer = userRepository.findByEmail(email).orElseThrow(() -> new IllegalStateException("Invalid Email!"));
         if(customer.isActive()){
@@ -220,19 +224,15 @@ public class UserDaoService {
         return "New Activation Link sent successfully on your registered email";
     }
 
+    @Override
     @Transactional
     public ResponseEntity<?> logout(HttpServletRequest request) {
         String tokenValue = tokenService.getJWTFromRequest(request);
         if (tokenValue == null) {
             return new ResponseEntity<>("Token not found", HttpStatus.BAD_REQUEST);
         }
-        BlackListToken jwtBlacklist = new BlackListToken();
         Optional<Token> token = accessTokenRepository.findByToken(tokenValue);
         if (token.isPresent()) {
-            /*need discussion*/
-            jwtBlacklist.setToken(token.get().getToken());
-            jwtBlacklist.setUserEntity(token.get().getUserEntity());
-            jwtBlackListRepository.save(jwtBlacklist);
             if(accessTokenRepository.existsByUserId(token.get().getUserEntity().getId())>0){
                 accessTokenRepository.deleteByUserId(token.get().getUserEntity().getId());
             }

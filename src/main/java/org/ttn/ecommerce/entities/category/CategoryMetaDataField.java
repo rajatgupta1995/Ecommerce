@@ -4,9 +4,13 @@ import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
-@Data
+@Setter
+
+@Getter
 public class CategoryMetaDataField {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,6 +18,6 @@ public class CategoryMetaDataField {
 
     private String name;
 
-    @OneToMany(mappedBy = "categoryMetaDataField")
+    @OneToMany(mappedBy = "categoryMetaDataField",fetch = FetchType.EAGER,cascade = CascadeType.MERGE)
     private Set<CategoryMetadataFieldValue> categoryMetadataFieldValues = new HashSet<>();
 }
