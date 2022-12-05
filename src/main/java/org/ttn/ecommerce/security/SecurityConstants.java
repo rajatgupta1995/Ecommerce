@@ -17,5 +17,6 @@ public class SecurityConstants {
 
     public static final long FORGET_PASS_EXPIRE_MINUTES = 15;
 
+    public static   String FILE_UPLOAD_URL = "/home/rajat/Desktop/image";
 
 }

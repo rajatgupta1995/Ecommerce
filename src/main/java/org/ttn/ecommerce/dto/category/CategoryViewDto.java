@@ -1,7 +1,7 @@
 package org.ttn.ecommerce.dto.category;
 
 import lombok.Data;
-import org.ttn.ecommerce.entities.category.Category;
+import org.ttn.ecommerce.entity.category.Category;
 
 import java.util.HashSet;
 import java.util.Set;

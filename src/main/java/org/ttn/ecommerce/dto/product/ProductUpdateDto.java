@@ -12,4 +12,6 @@ public class ProductUpdateDto {
     private Boolean isCancellable;
     private Boolean isReturnable;
     private String name;
+
+    private String brand;
 }

@@ -2,7 +2,7 @@ package org.ttn.ecommerce.Validations;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
+import org.ttn.ecommerce.repository.registerrepository.UserRepository;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;

@@ -5,7 +5,8 @@ import org.ttn.ecommerce.Validations.Password;
 import org.ttn.ecommerce.Validations.Phone;
 import org.ttn.ecommerce.Validations.UniqueEmail;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 
 @Data
 public class CustomerRegisterDto {

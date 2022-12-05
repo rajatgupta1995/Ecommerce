@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.ttn.ecommerce.dto.updateDto.AddressDto;
 import org.ttn.ecommerce.dto.updateDto.ChangePasswordDto;
 import org.ttn.ecommerce.dto.updateDto.UpdateCustomerDto;
-import org.ttn.ecommerce.entities.register.Address;
+import org.ttn.ecommerce.entity.register.Address;
 
 public interface CustomerService {
     //view-profile

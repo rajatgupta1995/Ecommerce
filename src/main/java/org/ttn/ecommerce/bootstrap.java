@@ -6,11 +6,11 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.ttn.ecommerce.entities.register.Address;
-import org.ttn.ecommerce.entities.register.Role;
-import org.ttn.ecommerce.entities.register.UserEntity;
-import org.ttn.ecommerce.repository.RegisterRepository.RoleRepository;
-import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
+import org.ttn.ecommerce.entity.register.Address;
+import org.ttn.ecommerce.entity.register.Role;
+import org.ttn.ecommerce.entity.register.UserEntity;
+import org.ttn.ecommerce.repository.registerrepository.RoleRepository;
+import org.ttn.ecommerce.repository.registerrepository.UserRepository;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -66,7 +66,7 @@ public class bootstrap implements ApplicationRunner {
             userEntity.setExpired(false);
             userEntity.setLocked(false);
             userEntity.setInvalidAttemptCount(0);
-            userEntity.setPassword(passwordEncoder.encode("admin@123"));
+            userEntity.setPassword(passwordEncoder.encode("Admin@123"));
 
             address.setUserEntity(userEntity);
 

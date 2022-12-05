@@ -7,15 +7,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.ttn.ecommerce.dto.category.*;
-import org.ttn.ecommerce.entities.category.Category;
-import org.ttn.ecommerce.entities.category.CategoryMetaDataField;
-import org.ttn.ecommerce.entities.category.CategoryMetadataFieldValue;
+import org.ttn.ecommerce.entity.category.Category;
+import org.ttn.ecommerce.entity.category.CategoryMetaDataField;
+import org.ttn.ecommerce.entity.category.CategoryMetadataFieldValue;
+import org.ttn.ecommerce.exception.BadRequestException;
 import org.ttn.ecommerce.exception.CategoryNotFoundException;
 import org.ttn.ecommerce.exception.ResourceNotFoundException;
 import org.ttn.ecommerce.exception.UserAlreadyExistsException;
-import org.ttn.ecommerce.repository.categoryRepository.CategoryMetaDataFieldRepository;
-import org.ttn.ecommerce.repository.categoryRepository.CategoryMetadataFieldValueRepository;
-import org.ttn.ecommerce.repository.categoryRepository.CategoryRepository;
+import org.ttn.ecommerce.repository.productrepository.ProductRepository;
+import org.ttn.ecommerce.repository.categoryrepository.CategoryMetaDataFieldRepository;
+import org.ttn.ecommerce.repository.categoryrepository.CategoryMetadataFieldValueRepository;
+import org.ttn.ecommerce.repository.categoryrepository.CategoryRepository;
 import org.ttn.ecommerce.services.CategoryService;
 import org.ttn.ecommerce.utils.StringToSetParser;
 
@@ -32,6 +34,9 @@ public class CategoryServiceImpl implements CategoryService {
     private CategoryMetaDataFieldRepository categoryMetadataFieldRepository;
     @Autowired
     private CategoryMetadataFieldValueRepository categoryMetadataFieldValuesRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
 
     //to add metadata field
     @Override
@@ -69,11 +74,10 @@ public class CategoryServiceImpl implements CategoryService {
         String categoryName =categoryDto.getName();
         Long  parentCategoryId= categoryDto.getParentCategoryId();
         Category parent=null;
-        if(parentCategoryId !=null){
+        if(parentCategoryId != null){
             parent = categoryRepository.findById(parentCategoryId)
                     .orElseThrow(()->new CategoryNotFoundException("Parent Category Id Is Not Valid!"));
 
-            /*      Check if Category contains Product       */
 //            if(productRepository.existsByCategoryId(parent.getId())>0){
 //                return new ResponseEntity<>("Parent Category Should Not Associated With Any Product",HttpStatus.BAD_REQUEST);
 //            }
@@ -98,9 +102,17 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     @Override
-    public ResponseEntity<?> viewAllCategories(){
+    public ResponseEntity<List<SubCategoryDto>> viewAllCategories(){
         List<Category> categories= categoryRepository.findAll();
-        return new ResponseEntity<>(categories,HttpStatus.OK);
+        List<SubCategoryDto> subCategoryDtoList = new ArrayList<>();
+        for (Category category : categories){
+            SubCategoryDto subCategoryDto = new SubCategoryDto();
+            subCategoryDto.setId(category.getId());
+            subCategoryDto.setName(category.getName());
+
+            subCategoryDtoList.add(subCategoryDto);
+        }
+        return new ResponseEntity<>(subCategoryDtoList,HttpStatus.OK);
     }
 
 
@@ -149,7 +161,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public String addNewMetadataFieldValues(CategoryMetaDataFieldValueDto categoryMetaDataFieldValueDto, Long categoryId, Long metaFieldId){
+    public ResponseEntity<?> addNewMetadataFieldValues(CategoryMetaDataFieldValueDto categoryMetaDataFieldValueDto, Long categoryId, Long metaFieldId){
 
         Optional<Category> category= categoryRepository.findById(categoryId);
         Optional<CategoryMetaDataField> categoryMetadataField= categoryMetadataFieldRepository.findById(metaFieldId);
@@ -157,7 +169,9 @@ public class CategoryServiceImpl implements CategoryService {
             throw new ResourceNotFoundException("Category does not exists");
         else if (!categoryMetadataField.isPresent())
             throw new ResourceNotFoundException("Metadata field does not exists");
-        else{
+        else if(categoryMetaDataFieldValueDto.getValues().isEmpty()){
+            return new ResponseEntity<>("Fields should have at least one value",HttpStatus.BAD_REQUEST);
+        }else{
             Category category1= new Category();
             category1= category.get();
 
@@ -166,8 +180,6 @@ public class CategoryServiceImpl implements CategoryService {
 
             //Logic
             CategoryMetadataFieldValue categoryFieldValues = new CategoryMetadataFieldValue();
-//
-//            for(CategoryMetaDataFieldValueDto fieldValuePair : fieldValueDtos.getFieldValues()){
 
             String values = StringToSetParser.toCommaSeparatedString(categoryMetaDataFieldValueDto.getValues());
 
@@ -176,7 +188,7 @@ public class CategoryServiceImpl implements CategoryService {
             categoryFieldValues.setCategoryMetaDataField(categoryMetadataField1);
 
             categoryMetadataFieldValuesRepository.save(categoryFieldValues);
-            return "Metadata field values added successfully";
+            return new ResponseEntity<>("Metadata field values added successfully",HttpStatus.OK);
         }
 
     }
@@ -212,4 +224,62 @@ public class CategoryServiceImpl implements CategoryService {
                 return new ResponseEntity<>("Updated the passed values to category metadata field: "+ categoryMetaDataField1.getName(), HttpStatus.CREATED);
             }
         }
+
+    public List<SellerCategoryResponseDTO> viewSellerCategory(){
+        List<Category> categoryList = categoryRepository.findAll();
+        List<SellerCategoryResponseDTO> responseList = new ArrayList<>();
+        for(Category category: categoryList){
+            if(category.getSubCategory().isEmpty()){
+
+                List<CategoryMetadataFieldValue> categoryMetadataList =
+                        categoryMetadataFieldValuesRepository.findByCategory(category);
+
+                SellerCategoryResponseDTO sellerResponse = new SellerCategoryResponseDTO();
+
+                sellerResponse.setId(category.getId());
+                sellerResponse.setName(category.getName());
+
+                CategoryDto categoryDto=new CategoryDto();
+
+                categoryDto.setName(category.getParentCategory().getName());
+                categoryDto.setParentCategoryId(category.getParentCategory().getId());
+
+                sellerResponse.setParent(categoryDto);
+
+                List<MetadataResponseDTO> metaList = new ArrayList<>();
+
+                for (CategoryMetadataFieldValue metadata: categoryMetadataList){
+                    MetadataResponseDTO metadataResponseDTO = new MetadataResponseDTO();
+                    metadataResponseDTO.setMetadataId(metadata.getCategoryMetaDataField().getId());
+                    metadataResponseDTO.setFieldName(metadata.getCategoryMetaDataField().getName());
+                    metadataResponseDTO.setPossibleValues(metadata.getValue());
+                    metaList.add(metadataResponseDTO);
+                }
+                sellerResponse.setMetadata(metaList);
+                responseList.add(sellerResponse);
+            }
+        }
+        return responseList;
+    }
+
+    public List<Category> viewCustomerCategory(Optional<Integer> optionalId){
+        if(optionalId.isPresent()){
+            // if ID is present, fetch its immediate children
+            Category category = categoryRepository.findById((long)optionalId.get()).orElseThrow(() -> new BadRequestException("Invalid id"));
+            List<Category> childList = category.getSubCategory();
+            return childList;
+        }
+        else{
+            // if ID isn't provided fetch all root nodes
+            List<Category> categoryList = categoryRepository.findAll();
+            List<Category> rootNodes = new ArrayList<>();
+            // filtering rootNodes
+            for(Category category: categoryList){
+                if(category.getParentCategory()==null){
+                    rootNodes.add(category);
+                }
+            }
+            return rootNodes;
+        }
+    }
 }

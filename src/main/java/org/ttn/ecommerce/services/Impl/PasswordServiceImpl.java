@@ -9,15 +9,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.ttn.ecommerce.dto.accountAuthService.ResetPasswordDto;
-import org.ttn.ecommerce.entities.register.UserEntity;
-import org.ttn.ecommerce.entities.token.ForgetPasswordToken;
+import org.ttn.ecommerce.entity.register.UserEntity;
+import org.ttn.ecommerce.entity.token.ForgetPasswordToken;
 import org.ttn.ecommerce.exception.TokenExpiredException;
 import org.ttn.ecommerce.exception.UserNotFoundException;
-import org.ttn.ecommerce.repository.TokenRepository.AccessTokenRepository;
-import org.ttn.ecommerce.repository.TokenRepository.ForgetPasswordRepository;
-import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
+import org.ttn.ecommerce.repository.registerrepository.UserRepository;
+import org.ttn.ecommerce.repository.tokenrepository.AccessTokenRepository;
+import org.ttn.ecommerce.repository.tokenrepository.ForgetPasswordRepository;
 import org.ttn.ecommerce.security.SecurityConstants;
-import org.ttn.ecommerce.services.EmailService;
 import org.ttn.ecommerce.services.PasswordService;
 
 import java.time.Duration;
@@ -53,18 +52,11 @@ public class PasswordServiceImpl implements PasswordService {
 
             /*Fetching forget token from forgetPasswordRepository if present in forget_password_token table with this user_id*/
             Optional<ForgetPasswordToken> forgetPasswordToken = forgetPasswordRepository.getTokenByUserId(userEntity.get().getId());
-            System.out.println("dfds");
+
             /* If forget password token already exist*/
             if(forgetPasswordToken.isPresent()){
-//                LocalDateTime expireAt=forgetPasswordToken.getExpireAt();
-//                if(expireAt.isBefore(LocalDateTime.now())){
-//
-//                }
-                System.out.println("dfds");
                 forgetPasswordRepository.deleteByTokenId(forgetPasswordToken.get().getId());
             }
-            System.out.println("dfds");
-
             /*Generating a new forget token*/
             ForgetPasswordToken forgetPassword = forgerPassGenerate(userEntity.get());
             forgetPasswordRepository.save(forgetPassword);
@@ -122,7 +114,7 @@ public class PasswordServiceImpl implements PasswordService {
         Optional<ForgetPasswordToken> forgetPasswordToken = forgetPasswordRepository.findByToken(resetPasswordDto.getToken());
         UserEntity user=userEntity.get();
         /*Checking token present in forgetTokenRepository or not*/
-        if(forgetPasswordToken.isPresent()){
+        if(forgetPasswordToken.isPresent() && forgetPasswordToken.get().getUserEntity().getEmail() == user.getEmail()){
             ForgetPasswordToken forgetPasswordToken_=forgetPasswordToken.get();
             /*Checking token expiry*/
             if(verifyToken(forgetPasswordToken_.getExpireAt())){
@@ -132,7 +124,10 @@ public class PasswordServiceImpl implements PasswordService {
             else{
                 user.setPassword(passwordEncoder.encode(resetPasswordDto.getPassword()));
                 userRepository.save(user);
-
+                /*Bonus*/
+                if (passwordEncoder.matches(resetPasswordDto.getPassword(), user.getPassword())) {
+                    return new ResponseEntity<>("Old password and new Password are same",HttpStatus.BAD_REQUEST);
+                }
                 if(accessTokenRepository.existsByUserId(user.getId()) > 0){
                     accessTokenRepository.deleteByUserId(user.getId());
                 }
@@ -149,7 +144,7 @@ public class PasswordServiceImpl implements PasswordService {
                 return new ResponseEntity<>("Password changed",HttpStatus.OK);
             }
         }else{
-            throw new TokenExpiredException("Invalid Token");
+            throw new TokenExpiredException("Invalid Token or wrong email");
         }
     }
 }

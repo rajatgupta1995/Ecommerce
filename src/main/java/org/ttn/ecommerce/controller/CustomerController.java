@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.util.StringUtils;
@@ -12,16 +13,21 @@ import org.springframework.web.multipart.MultipartFile;
 import org.ttn.ecommerce.dto.updateDto.AddressDto;
 import org.ttn.ecommerce.dto.updateDto.ChangePasswordDto;
 import org.ttn.ecommerce.dto.updateDto.UpdateCustomerDto;
-import org.ttn.ecommerce.entities.register.Address;
-import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
+import org.ttn.ecommerce.entity.category.Category;
+import org.ttn.ecommerce.entity.register.Address;
+import org.ttn.ecommerce.repository.registerrepository.UserRepository;
 import org.ttn.ecommerce.security.SecurityConstants;
+import org.ttn.ecommerce.services.CategoryService;
 import org.ttn.ecommerce.services.CustomerService;
-import org.ttn.ecommerce.services.ImageService;
+import org.ttn.ecommerce.services.Impl.ImageService;
 import org.ttn.ecommerce.services.UserService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -35,6 +41,8 @@ public class CustomerController {
     private UserService userService;
     @Autowired
     private ImageService imageService;
+    @Autowired
+    private CategoryService categoryService;
 
     /**
      * API to view customer profile
@@ -93,7 +101,10 @@ public class CustomerController {
         return customerService.updateCustomerAddress(authentication,id,addressDto);
     }
 
-    @PostMapping(value = "upload/image")
+    /**
+     * API to upload image
+     */
+    @PostMapping(value = "upload/image") //http://localhost:6640/seller/upload/image
     public String uploadImage(@RequestParam("image") MultipartFile image, HttpServletRequest request)
             throws IOException {
         String email = "";
@@ -111,19 +122,10 @@ public class CustomerController {
         return imageService.uploadImage(email, image);
     }
 
-    @GetMapping("/view/image")
-    public ResponseEntity<?> listFilesUsingJavaIO(HttpServletRequest request) {
-
-        String email = "";
-        String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")) {
-            String token = bearerToken.substring(7);
-            Claims claims = Jwts.parser()
-                    .setSigningKey(SecurityConstants.JWT_SECRET)
-                    .parseClaimsJws(token)
-                    .getBody();
-            email = claims.getSubject();
-        }
-        return imageService.getImage(email);
+    @GetMapping( "/customer/{id}")
+    public ResponseEntity<List<Category>> viewCustomerCategory(@PathVariable("id") Optional<Integer> optionalId){
+        List<Category> responseList = categoryService.viewCustomerCategory(optionalId);
+        return new ResponseEntity<>(responseList, HttpStatus.OK);
     }
+
 }

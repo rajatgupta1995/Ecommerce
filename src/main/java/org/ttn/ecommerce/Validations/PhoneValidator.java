@@ -3,8 +3,6 @@ package org.ttn.ecommerce.Validations;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import static ch.qos.logback.core.joran.action.ActionConst.NULL;
-
 public class PhoneValidator implements ConstraintValidator<Phone,String> {
 
     @Override

@@ -2,6 +2,10 @@ package org.ttn.ecommerce.services;
 
 import org.springframework.http.ResponseEntity;
 import org.ttn.ecommerce.dto.category.*;
+import org.ttn.ecommerce.entity.category.Category;
+
+import java.util.List;
+import java.util.Optional;
 
 public interface CategoryService {
     //to add metadata field
@@ -13,13 +17,17 @@ public interface CategoryService {
     //to add new category
     ResponseEntity<?> addCategory(CategoryDto categoryDto);
 
-    ResponseEntity<?> viewAllCategories();
+    ResponseEntity<List<SubCategoryDto>>viewAllCategories();
 
     CategoryViewDto viewCategory(long id);
 
     ResponseEntity<?> updateCategory(long categoryId, CategoryUpdateDto categoryUpdateDto);
 
-    String addNewMetadataFieldValues(CategoryMetaDataFieldValueDto categoryMetaDataFieldValueDto, Long categoryId, Long metaFieldId);
+    ResponseEntity<?> addNewMetadataFieldValues(CategoryMetaDataFieldValueDto categoryMetaDataFieldValueDto, Long categoryId, Long metaFieldId);
 
     ResponseEntity<?> updateCategoryMetadataFieldValues(Long categoryId, Long metadataFieldId, CategoryMetaDataFieldValueDto categoryMetaDataFieldValueDto);
+
+    List<SellerCategoryResponseDTO> viewSellerCategory();
+
+    List<Category> viewCustomerCategory(Optional<Integer> optionalId);
 }

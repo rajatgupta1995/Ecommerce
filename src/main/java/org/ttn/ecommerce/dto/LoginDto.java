@@ -9,7 +9,7 @@ import javax.validation.constraints.Email;
 public class LoginDto {
     @Email
     private String email;
-//  @Password
+    @Password
     private String password;
 
 }

@@ -5,9 +5,8 @@ import org.springframework.security.core.Authentication;
 import org.ttn.ecommerce.dto.updateDto.AddressDto;
 import org.ttn.ecommerce.dto.updateDto.ChangePasswordDto;
 import org.ttn.ecommerce.dto.updateDto.UpdateSellerDto;
-import org.ttn.ecommerce.entities.register.Seller;
+import org.ttn.ecommerce.entity.register.Seller;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public interface SellerService {
@@ -24,5 +23,5 @@ public interface SellerService {
     ResponseEntity<String> updateSellerPassword(Authentication authentication, ChangePasswordDto changePasswordDto);
 
     //function for update-address API
-    ResponseEntity<String> updateSellerAddress(Authentication authentication, Long id, AddressDto addressDto);
+    ResponseEntity<String> updateSellerAddress(Authentication authentication,AddressDto addressDto);
 }

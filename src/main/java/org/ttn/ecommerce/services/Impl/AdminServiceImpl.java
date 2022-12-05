@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,17 +15,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.stereotype.Service;
-import org.ttn.ecommerce.entities.register.Customer;
-import org.ttn.ecommerce.entities.register.Seller;
-import org.ttn.ecommerce.entities.register.UserEntity;
+import org.ttn.ecommerce.entity.register.Customer;
+import org.ttn.ecommerce.entity.register.Seller;
+import org.ttn.ecommerce.entity.register.UserEntity;
 import org.ttn.ecommerce.exception.NotFoundRequestException;
-import org.ttn.ecommerce.repository.RegisterRepository.CustomerRepository;
-import org.ttn.ecommerce.repository.RegisterRepository.SellerRepository;
-import org.ttn.ecommerce.repository.RegisterRepository.UserRepository;
+import org.ttn.ecommerce.repository.registerrepository.CustomerRepository;
+import org.ttn.ecommerce.repository.registerrepository.SellerRepository;
+import org.ttn.ecommerce.repository.registerrepository.UserRepository;
 import org.ttn.ecommerce.services.AdminService;
-import org.ttn.ecommerce.services.EmailService;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -40,9 +42,12 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     private SellerRepository sellerRepository;
+    @Autowired
+    private MessageSource messageSource;
 
     @Override
     public ResponseEntity<?> activateUser(Long user_id) {
+        Locale locale= LocaleContextHolder.getLocale();
         Optional<UserEntity> user_=userRepository.findById(user_id);
         /*checking user exists or not*/
         if(user_.isPresent()){
@@ -54,8 +59,8 @@ public class AdminServiceImpl implements AdminService {
                 userRepository.save(user);
                 /*Send Email*/
                 String toEmail= user.getEmail();
-                String subject="Account Activated!!";
-                String message="Your account is successfully activated by Admin.";
+                String subject=messageSource.getMessage("api.email.activationSubject",null,locale);
+                String message=messageSource.getMessage("api.email.activationMessage",null,locale);;
                 emailService.sendEmail(toEmail,subject,message);
                 log.info("User activated!!");
                 return new ResponseEntity<>(String.format("User with this User Id: %s is activated.",user_id), HttpStatus.OK);
@@ -72,6 +77,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseEntity<?> deactivateUser(Long user_id) {
+        Locale locale=LocaleContextHolder.getLocale();
         Optional<UserEntity> user_=userRepository.findById(user_id);
         /*checking user exists or not*/
         if(user_.isPresent()){
@@ -82,7 +88,7 @@ public class AdminServiceImpl implements AdminService {
                 userRepository.save(user);
                 /*Send Email*/
                 String toEmail= user.getEmail();
-                String subject="Account Deactivated!!";
+                String subject=messageSource.getMessage("api.email.deactivationSubject",null,locale);
                 String message="Your account has been deactivated.\\nKindly contact Admin to activate your account again, Thanks";
                 emailService.sendEmail(toEmail,subject,message);
                 log.info("User Deactivated!!");

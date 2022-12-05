@@ -1,7 +1,11 @@
 package org.ttn.ecommerce.dto.product;
 
-import lombok.*;
-import org.ttn.ecommerce.entities.category.Category;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.ttn.ecommerce.dto.category.CategoryDto;
+import org.ttn.ecommerce.entity.category.Category;
 
 @Getter
 @Setter
@@ -12,6 +16,10 @@ public class ProductViewDto {
     private String name;
     private String description;
     private String brand;
+
+    private boolean isCancellable;
+
+    private boolean isReturnable;
     private boolean isActive;
-    private Category category;
+    private CategoryDto category;
 }

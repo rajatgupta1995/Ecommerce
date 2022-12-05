@@ -5,7 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.ttn.ecommerce.dto.LoginDto;
 import org.ttn.ecommerce.dto.register.CustomerRegisterDto;
 import org.ttn.ecommerce.dto.register.SellerRegisterDto;
-import org.ttn.ecommerce.entities.register.UserEntity;
+import org.ttn.ecommerce.entity.register.UserEntity;
 
 import javax.servlet.http.HttpServletRequest;
 

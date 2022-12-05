@@ -2,6 +2,8 @@ package org.ttn.ecommerce.services.Impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailException;
@@ -13,16 +15,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.ttn.ecommerce.dto.CustomerDto;
 import org.ttn.ecommerce.dto.updateDto.AddressDto;
-import org.ttn.ecommerce.dto.updateDto.UpdateCustomerDto;
 import org.ttn.ecommerce.dto.updateDto.ChangePasswordDto;
-import org.ttn.ecommerce.entities.register.Address;
-import org.ttn.ecommerce.entities.register.Customer;
-import org.ttn.ecommerce.repository.RegisterRepository.CustomerRepository;
-import org.ttn.ecommerce.repository.TokenRepository.AccessTokenRepository;
-import org.ttn.ecommerce.repository.TokenRepository.ActivationTokenRepository;
-import org.ttn.ecommerce.repository.TokenRepository.AddressRepository;
+import org.ttn.ecommerce.dto.updateDto.UpdateCustomerDto;
+import org.ttn.ecommerce.entity.register.Address;
+import org.ttn.ecommerce.entity.register.Customer;
+import org.ttn.ecommerce.repository.registerrepository.CustomerRepository;
+import org.ttn.ecommerce.repository.tokenrepository.AccessTokenRepository;
+import org.ttn.ecommerce.repository.tokenrepository.ActivationTokenRepository;
+import org.ttn.ecommerce.repository.tokenrepository.AddressRepository;
 import org.ttn.ecommerce.services.CustomerService;
-import org.ttn.ecommerce.services.EmailService;
 import org.ttn.ecommerce.services.TokenService;
 
 import java.util.*;
@@ -48,6 +49,10 @@ public class CustomerServiceImpl implements CustomerService {
     private ActivationTokenRepository activationTokenRepository;
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private ImageService imageService;
+    @Autowired
+    private MessageSource messageSource;
 
 
 
@@ -68,6 +73,9 @@ public class CustomerServiceImpl implements CustomerService {
             customerDto.setContact(customer.getContact());
             customerDto.setEmail(customer.getEmail());
             customerDto.setActive(customerDto.isActive());
+            customerDto.setImagePath(imageService.getImagePath(customer));
+
+
             List<AddressDto> addressDtoList=new ArrayList<>();
             for(Address address: addressList){
                 AddressDto addressDto=new AddressDto();
@@ -88,8 +96,8 @@ public class CustomerServiceImpl implements CustomerService {
 //            else
 //                return new ResponseEntity<>("Customer User Id: "+customer.getId()+"\nCustomer First name: "+customer.getFirstName()+"\nCustomer Last name: "+customer.getLastName()+"\nCustomer active status: "+customer.isActive()+"\nCustomer Contact: "+customer.getContact(), HttpStatus.OK);
         }else{
-            log.info("Couldn't find address related to this Customer!");
-            return new ResponseEntity<>("Error fetching addresses", HttpStatus.NOT_FOUND);
+            log.info("Customer does not exists with this email");
+            return new ResponseEntity<>("Customer does not exists with this email", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -100,13 +108,13 @@ public class CustomerServiceImpl implements CustomerService {
 
         if(customerRepository.existsByEmail(email)){
             log.info("Customer exists!");
-            Set<Address> addressList = new HashSet<>();
+            //Set<Address> addressList = new HashSet<>();
             Customer customer=customerRepository.findByEmail(email).get();
             address.setUserEntity(customer);
-            addressList.add(address);
+            //addressList.add(address);
             addressRepository.save(address);
 
-            customer.setAddresses(addressList);
+            //customer.setAddresses(addressList);
             log.info("New Address added for this customer");
             return new ResponseEntity<>("Address added successfully", HttpStatus.NOT_FOUND);
         }else{
@@ -122,9 +130,9 @@ public class CustomerServiceImpl implements CustomerService {
         if (customerRepository.existsByEmail(email)) {
             Customer customer = customerRepository.findByEmail(email).orElseThrow(() -> new IllegalStateException("No customer with this mail!"));
             List<Address> list = addressRepository.findByUserId(customer.getId());
-            List<String> list1 = list.stream().map(e->{
-                return e.toString();
-            }).collect(Collectors.toList());
+//            List<String> list1 = list.stream().map(e->{
+//                return e.toString();
+//            }).collect(Collectors.toList());
             return new ResponseEntity<>(list, HttpStatus.OK);
         } else {
             return new ResponseEntity<>("Error fetching addresses", HttpStatus.NOT_FOUND);
@@ -196,6 +204,7 @@ public class CustomerServiceImpl implements CustomerService {
     //update-password
     @Override
     public ResponseEntity<String> updateCustomerPassword(Authentication authentication, ChangePasswordDto changePasswordDto){
+        Locale locale= LocaleContextHolder.getLocale();
         String email= authentication.getName();
         if(customerRepository.existsByEmail(email)){
 
@@ -203,18 +212,18 @@ public class CustomerServiceImpl implements CustomerService {
             String oldPassword = customer.getPassword();
             String newPassword = passwordEncoder.encode(changePasswordDto.getPassword());
             if(!changePasswordDto.getPassword().equals(changePasswordDto.getConfirmPassword()))  {
-                return new ResponseEntity<>("Password and confirm Password do not match",HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(messageSource.getMessage("api.error.passwordNotMatches",null,locale),HttpStatus.BAD_REQUEST);
             }
-//            if (oldPassword.equals(newPassword)) {
-//                return new ResponseEntity<>("Old password and new Password are same",HttpStatus.BAD_REQUEST);
-//            }
-//            if(accessTokenRepository.existsByUserId(token.getUserEntity().getId()) >0){
-//                accessTokenRepository.deleteByUserId(token.getUserEntity().getId());
-//            }
+            if (passwordEncoder.matches(changePasswordDto.getPassword(),oldPassword)) {
+                return new ResponseEntity<>(messageSource.getMessage("api.error.oldPasswordMatch",null,locale),HttpStatus.BAD_REQUEST);
+            }
+            if(accessTokenRepository.existsByUserId(customer.getId()) > 0){
+                accessTokenRepository.deleteByUserId(customer.getId());
+            }
             customer.setPassword(newPassword);
             customerRepository.save(customer);
             log.info("Password updated!");
-
+            /*send mail to customer */
             SimpleMailMessage mailMessage = new SimpleMailMessage();
             mailMessage.setSubject("Password Updated");
             mailMessage.setText("Your password is updated, If not done  by you contact Admin asap.\n Thanks.");

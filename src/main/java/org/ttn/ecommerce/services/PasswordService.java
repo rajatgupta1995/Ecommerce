@@ -3,8 +3,8 @@ package org.ttn.ecommerce.services;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.ttn.ecommerce.dto.accountAuthService.ResetPasswordDto;
-import org.ttn.ecommerce.entities.register.UserEntity;
-import org.ttn.ecommerce.entities.token.ForgetPasswordToken;
+import org.ttn.ecommerce.entity.register.UserEntity;
+import org.ttn.ecommerce.entity.token.ForgetPasswordToken;
 
 import java.time.LocalDateTime;
 

@@ -7,7 +7,7 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
-import org.ttn.ecommerce.entities.token.Token;
+import org.ttn.ecommerce.entity.token.Token;
 
 import java.util.Date;
 import java.util.stream.Collectors;

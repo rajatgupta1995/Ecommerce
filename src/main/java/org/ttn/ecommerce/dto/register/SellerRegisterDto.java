@@ -1,7 +1,10 @@
 package org.ttn.ecommerce.dto.register;
 
 import lombok.Data;
-import org.ttn.ecommerce.Validations.*;
+import org.ttn.ecommerce.Validations.Gst;
+import org.ttn.ecommerce.Validations.Password;
+import org.ttn.ecommerce.Validations.Phone;
+import org.ttn.ecommerce.Validations.UniqueEmail;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;

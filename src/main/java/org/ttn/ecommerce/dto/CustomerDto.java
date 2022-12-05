@@ -1,7 +1,6 @@
 package org.ttn.ecommerce.dto;
 
 import lombok.Data;
-import org.ttn.ecommerce.Validations.Phone;
 import org.ttn.ecommerce.dto.updateDto.AddressDto;
 
 import java.util.List;
@@ -18,4 +17,6 @@ public class CustomerDto {
 
     private boolean active;
     private List<AddressDto> addressDto;
+
+    private String imagePath;
 }

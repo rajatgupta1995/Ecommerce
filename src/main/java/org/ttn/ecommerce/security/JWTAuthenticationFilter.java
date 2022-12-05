@@ -7,8 +7,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.ttn.ecommerce.entities.token.Token;
-import org.ttn.ecommerce.repository.TokenRepository.AccessTokenRepository;
+import org.ttn.ecommerce.entity.token.Token;
+import org.ttn.ecommerce.repository.tokenrepository.AccessTokenRepository;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;

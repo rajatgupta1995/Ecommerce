@@ -1,7 +1,7 @@
 package org.ttn.ecommerce.Validations;
 
 
-import org.ttn.ecommerce.entities.register.UserEntity;
+import org.ttn.ecommerce.entity.register.UserEntity;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
